@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-type" content="text/html">
+    <title>CASTLE GAME</title>
+    <!-- There are a few global vars, import them first -->
+    <script src="js/globals.js" type="text/javascript" charset="utf-8"></script>
+    
+    <script src="js/simple_actor.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
+  </head>
+  <body>
+    <!-- Add your site or application content here -->
+    <div id="gamecontainer">
+      <div id="gameinterfacescreen" >
+        <canvas id="gamecanvas" width="800" height="600"></canvas>
+        <canvas id="mousecanvas" width="800" height="600"></canvas>
+      </div>
+    </div>
+    <script type="text/javascript">
+      // add some key listeners from key_listener.js
+      window.addEventListener('keyup', function(event) { KeyListener.onKeyup(event); }, false);
+      window.addEventListener('keydown', function(event) { KeyListener.onKeydown(event); }, false);
+
+      var unit = new Unit();
+      var foregroundCanvas = document.getElementById("gamecanvas");
+      var foregroundContext = foregroundCanvas.getContext('2d');
+      
+
+      function gameLoop () 
+      {  
+        unit.update()
+        window.requestAnimationFrame( gameLoop );
+      }
+
+      function drawLoop () 
+      {
+        // fast way to clear the foreground canvas
+        foregroundCanvas.width = foregroundCanvas.width;
+
+        unit.draw( foregroundContext );
+        window.requestAnimationFrame( drawLoop );
+      }
+
+      $(window).load(function() {
+        drawLoop();
+        gameLoop();
+      });
+    </script>
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <!--<script>
+    (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+    function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+    e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+    e.src='//www.google-analytics.com/analytics.js';
+    r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+    ga('create','UA-XXXXX-X');ga('send','pageview');
+    </script>-->
+  </body>
+</html>

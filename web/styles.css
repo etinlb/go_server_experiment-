@@ -1,0 +1,35 @@
+#gamecontainer {
+	border: 1px solid black;
+    left: 50%; 
+    width: 800px; 
+    height: 700px;
+    margin-left: -400px;
+    position:absolute;
+
+}
+
+.gamelayer {
+	position:absolute;
+	display:none;
+}
+
+/* Game Interface Screen */
+#gameinterfacescreen {
+    height: 600px;
+}
+
+#gameinterfacescreen canvas{
+    position:absolute;
+}
+
+#gameinterfacescreen #mousecanvas{
+    z-index:2;
+}
+
+#gameinterfacescreen #gamecanvas{
+    z-index:0;
+}
+
+body {
+    background-color: #cccccc;
+}
