@@ -17,5 +17,10 @@ GameState.prototype =
       this.paused = !this.paused;
       console.log("pasusing");
     }
+  },
+
+  draw: function( canvase )
+  {
+    return;
   }
 }

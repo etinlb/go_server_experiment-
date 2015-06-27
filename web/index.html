@@ -4,13 +4,19 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html">
     <title>CASTLE GAME</title>
+    <!-- Some helpful librarys -->
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="bower_components/underscore/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+
+
     <!-- There are a few global vars, import them first -->
     <script src="js/globals.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
 
     <script src="js/simple_actor.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/game_state.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/connection.js" type="text/javascript" charset="utf-8"></script>
-    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/game.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
   </head>
   <body>
@@ -22,43 +28,6 @@
       </div>
     </div>
     <script type="text/javascript">
-      // add some key listeners from key_listener.js
-      window.addEventListener('keyup', function(event) { KeyListener.onKeyup(event); }, false);
-      window.addEventListener('keydown', function(event) { KeyListener.onKeydown(event); }, false);
-
-      var unit = new Unit();
-      var foregroundCanvas = document.getElementById("gamecanvas");
-      var foregroundContext = foregroundCanvas.getContext('2d');
-
-      var connection = new Connection("ws://localhost:8080/ws");
-      var gameState = new GameState();
-      function gameLoop ()
-      {
-        while(gameState.paused)  // wait here
-        {
-          console.log("pasued");
-          gameState.update();
-        }
-        unit.update();
-        gameState.update();
-        connection.send( JSON.stringify(unit.buildPacket()) );
-        setTimeout(gameLoop, 500)
-        // window.requestAnimationFrame( gameLoop );
-      }
-
-      function drawLoop ()
-      {
-        // fast way to clear the foreground canvas
-        foregroundCanvas.width = foregroundCanvas.width;
-
-        unit.draw( foregroundContext );
-        window.requestAnimationFrame( drawLoop );
-      }
-
-      $(window).load(function() {
-        drawLoop();
-        gameLoop();
-      });
     </script>
     <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
     <!--<script>
