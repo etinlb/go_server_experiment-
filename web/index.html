@@ -6,8 +6,10 @@
     <title>CASTLE GAME</title>
     <!-- There are a few global vars, import them first -->
     <script src="js/globals.js" type="text/javascript" charset="utf-8"></script>
-    
+
     <script src="js/simple_actor.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/game_state.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/connection.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
   </head>
@@ -27,15 +29,24 @@
       var unit = new Unit();
       var foregroundCanvas = document.getElementById("gamecanvas");
       var foregroundContext = foregroundCanvas.getContext('2d');
-      
 
-      function gameLoop () 
-      {  
-        unit.update()
-        window.requestAnimationFrame( gameLoop );
+      var connection = new Connection("ws://localhost:8080/ws");
+      var gameState = new GameState();
+      function gameLoop ()
+      {
+        while(gameState.paused)  // wait here
+        {
+          console.log("pasued");
+          gameState.update();
+        }
+        unit.update();
+        gameState.update();
+        connection.send( JSON.stringify(unit.buildPacket()) );
+        setTimeout(gameLoop, 500)
+        // window.requestAnimationFrame( gameLoop );
       }
 
-      function drawLoop () 
+      function drawLoop ()
       {
         // fast way to clear the foreground canvas
         foregroundCanvas.width = foregroundCanvas.width;

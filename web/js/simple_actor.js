@@ -1,13 +1,29 @@
+
+/**
+ * http://stackoverflow.com/a/105074
+ * Thanks stack overflow
+ */
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
 function Unit()
 {
   this.x = 400;
   this.y = 400;
+  this.id = guid();
   this.color = "#00FF00";
 }
 
-Unit.prototype = 
+Unit.prototype =
 {
-  draw: function(context) 
+  draw: function(context)
   {
     context.fillStyle = this.color;
 
@@ -17,9 +33,9 @@ Unit.prototype =
     context.fillRect(x, y, 20, 20);
   },
 
-  update: function() 
+  update: function()
   {
-    // key comes from the global 
+    // key comes from the global
     // TODO: THIS IS UGLY AS FUCK
     if (KeyListener.isDown(KeyListener.UP)) this.moveUp();
     if (KeyListener.isDown(KeyListener.LEFT)) this.moveLeft();
@@ -27,24 +43,35 @@ Unit.prototype =
     if (KeyListener.isDown(KeyListener.RIGHT)) this.moveRight();
   },
 
-  moveLeft: function() 
+  moveLeft: function()
   {
     this.x -= 1;
   },
 
-  moveRight: function() 
+  moveRight: function()
   {
     this.x += 1;
   },
 
-  moveUp: function() 
+  moveUp: function()
   {
     this.y -= 1;
   },
 
-  moveDown: function() 
+  moveDown: function()
   {
     this.y += 1;
   },
+
+  buildPacket: function()
+  {
+    var packet =
+    {
+      x: this.x,
+      y: this.y,
+      id: this.id
+    }
+    return packet;
+  }
 
 }

@@ -6,6 +6,7 @@ var KeyListener = {
   UP: 38,
   RIGHT: 39,
   DOWN: 40,
+  p: 80,
   
   isDown: function(keyCode) {
     return this._pressed[keyCode];
