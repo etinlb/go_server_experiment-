@@ -13,9 +13,7 @@ GameState.prototype =
     // TODO: THIS IS UGLY AS FUCK
     if (KeyListener.isDown(KeyListener.DOWN))
     {
-      console.log("pasusing");
       this.paused = !this.paused;
-      console.log("pasusing");
     }
   },
 
