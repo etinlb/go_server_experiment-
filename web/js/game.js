@@ -7,6 +7,8 @@ $(window).load(function() {
   game.init();
 });
 
+// TODO: put this somewhere else
+var connectionQueue = [];
 // should read teh settings here maybe?
 function Game() {
   this.gameObjects = [];
@@ -31,6 +33,8 @@ Game.prototype = {
     var player = new Unit();
     this.addGameObject( player );
 
+    connectionQueue.push( {"event":"createUnit", "packet" : player.buildPacket() })
+
     var gameState = new GameState();
     this.addGameObject( gameState );
 
@@ -49,7 +53,7 @@ Game.prototype = {
   {
     console.log(this);
     console.log(evt);
-  }
+  },
 
   addGameObject: function( gameObject )
   {
@@ -95,6 +99,10 @@ Game.prototype = {
     if (this.connection.state() != WebSocket.OPEN){
       setTimeout( this.connectAndStart, 100);
     } else {
+      // send the queued messages
+      for (var i = connectionQueue.length - 1; i >= 0; i--) {
+        this.connection.send( connectionQueue[i]["event"], connectionQueue[i]["packet"] );
+      };
       this.play();
     }
   },
