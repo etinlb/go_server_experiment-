@@ -17,8 +17,15 @@ GameState.prototype =
     }
   },
 
-  draw: function( canvase )
+  draw: function( canvas )
   {
     return;
+  },
+
+  //TODO: FIgure out wtf is going on with this thing
+  dirty: function()
+  {
+    return false;
   }
+
 }

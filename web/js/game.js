@@ -64,13 +64,22 @@ Game.prototype = {
   },
 
   gameLoop: function() {
+    // TODO: Abstract message sending better
+    var packets = [];
+
     for (var i = this.gameObjects.length - 1; i >= 0; i--) {
       this.gameObjects[i].update();
+
+      if(this.gameObjects[i].dirty())
+      {
+        //TODO: this is awful
+        // packets.push(this.gameObjects[i].buildPacket())
+        var packet = this.gameObjects[i].buildPacket();
+        this.connection.send( "update", packet );
+      }
     };
 
     // separate packet generate loop maybe?
-    var packet = this.gameObjects[0].buildPacket();
-    this.connection.send( "update", packet );
 
     window.requestAnimationFrame(this.gameLoop); //.bind(this));  
     return;

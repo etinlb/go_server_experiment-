@@ -34,17 +34,17 @@ func wsHandler(writer http.ResponseWriter, request *http.Request) {
 	connections[conn] = true
 
 	defer conn.Close() // if this function ever exits, close the connection
+	// var messages =
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			return
 		}
-		log.Println("sending")
 		HandleEvent(msg)
 	}
 }
 
-var gameObjects map[string]GameObject
+var gameObjects map[string]*GameObject
 
 func main() {
 	port := flag.Int("port", 8080, "port to serve on")
@@ -53,7 +53,7 @@ func main() {
 
 	// =========Game Initializations============
 	// keyed by id
-	gameObjects = make(map[string]GameObject)
+	gameObjects = make(map[string]*GameObject)
 
 	connections = make(map[*websocket.Conn]bool)
 

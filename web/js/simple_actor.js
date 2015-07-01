@@ -16,6 +16,8 @@ function Unit()
 {
   this.x = 400;
   this.y = 400;
+  this.previous_x = this.x;
+  this.previous_y = this.y;
   this.id = guid();
   this.color = "#00FF00";
 }
@@ -34,6 +36,7 @@ Unit.prototype =
 
   update: function()
   {
+    this.saveOldState();
     // key comes from the global
     // TODO: THIS IS UGLY AS FUCK
     if (KeyListener.isDown(KeyListener.UP)) this.moveUp();
@@ -60,6 +63,20 @@ Unit.prototype =
   moveDown: function()
   {
     this.y += 1;
+  },
+
+  saveOldState: function()
+  {
+    this.previous_x = this.x;
+    this.previous_y = this.y;
+  },
+
+  dirty: function()
+  {
+    // returns if the object has been updated at all
+    // Currently just for movement
+    return this.x != this.previous_x ||
+           this.y != this.previous_y ;
   },
 
   buildPacket: function()

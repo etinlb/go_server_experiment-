@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"log"
 )
 
@@ -14,6 +14,13 @@ type Message struct {
 type CreateMessage struct {
 	X, Y int
 	Id   string
+}
+
+// messages to send back to client...Can't be raw json?
+// TODO: Figure out the struct stuff in go.
+type ObjectMessage struct {
+	Event  string     `json:"event"` // client works with lowercase
+	Packet GameObject `json:"data"`
 }
 
 // TODO: Learn go better so these and the messages structs could be combined
@@ -35,16 +42,27 @@ func HandleEvent(event []byte) {
 
 	if message.Event == "createUnit" {
 		newGameObj := MakeObjectFromJson(message.Data)
-		gameObjects[newGameObj.Id] = newGameObj
+		gameObjects[newGameObj.Id] = &newGameObj
 		log.Println(newGameObj.Rect)
 	} else if message.Event == "update" {
 		updateData := ReadCreateMessage(message.Data)
-
-		log.Println(gameObjects[updateData.Id])
-		fmt.Println(updateData)
-		// gameObjects[updateData.Id].Y = updateData.Y
-		// log.Println(gameObjects)
+		gameObjects[updateData.Id].Rect.Y = updateData.Y
+		gameObjects[updateData.Id].Rect.X = updateData.X
+		BuildUpdatePackage(gameObjects[updateData.Id])
 	}
+}
+
+func BuildUpdatePackage(gameObj *GameObject) {
+	updateMessage := ObjectMessage{Event: "update", Packet: *gameObj}
+	message, err := json.Marshal(updateMessage)
+	log.Println(string(message))
+	log.Println(err)
+	SendUpdatePackage(message)
+}
+
+//TODO: Do some logic to not send data to the client that sent the update message?
+func SendUpdatePackage(message []byte) {
+	sendAll(message)
 }
 
 func ReadCreateMessage(data json.RawMessage) CreateMessage {
