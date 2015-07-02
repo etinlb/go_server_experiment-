@@ -9,11 +9,22 @@ import (
 	"net/http"
 )
 
-var connections map[*websocket.Conn]bool
+var gameObjects map[string]*GameObject
 
-func sendAll(msg []byte) {
+var connections map[*websocket.Conn]bool
+var broadcastPackets [][]byte // array of packets to send to all connected players
+
+func sendPackets(msg []byte, excludeList map[*websocket.Conn]bool) {
 	for conn := range connections {
+
+		if _, ok := excludeList[conn]; ok {
+			log.Println("don't send!")
+			continue
+		}
+
 		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			log.Println("send!")
+
 			delete(connections, conn)
 			break
 		}
@@ -40,11 +51,9 @@ func wsHandler(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			return
 		}
-		HandleEvent(msg)
+		HandleEvent(msg, conn)
 	}
 }
-
-var gameObjects map[string]*GameObject
 
 func main() {
 	port := flag.Int("port", 8080, "port to serve on")
@@ -55,7 +64,9 @@ func main() {
 	// keyed by id
 	gameObjects = make(map[string]*GameObject)
 
+	// =========Connection Initializations============
 	connections = make(map[*websocket.Conn]bool)
+	// broadcastPackets = make([][]byte)
 
 	// handle all requests by serving a file of the same name
 	fs := http.Dir(*dir)

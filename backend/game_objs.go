@@ -3,8 +3,13 @@ package main
 import (
 	"encoding/json"
 	// "fmt"
+	"github.com/gorilla/websocket"
 	"log"
 )
+
+// type Packet struct {
+//     Data byte[]
+// }
 
 type Message struct {
 	Event string
@@ -34,36 +39,50 @@ type GameObject struct {
 	Id   string
 }
 
-func HandleEvent(event []byte) {
+func HandleEvent(event []byte, client *websocket.Conn) {
 	// TODO: Fix this so it's not just the general interface object
 	var message Message
-	log.Println(string(event))
 	json.Unmarshal(event, &message)
 
 	if message.Event == "createUnit" {
+		log.Println("Creating new object")
+
 		newGameObj := MakeObjectFromJson(message.Data)
 		gameObjects[newGameObj.Id] = &newGameObj
-		log.Println(newGameObj.Rect)
+
+		packet := BuildObjectPackage("createUnit", &newGameObj)
+
+		sendPackets(packet, ExcludeClient(client))
 	} else if message.Event == "update" {
 		updateData := ReadCreateMessage(message.Data)
+
 		gameObjects[updateData.Id].Rect.Y = updateData.Y
 		gameObjects[updateData.Id].Rect.X = updateData.X
-		BuildUpdatePackage(gameObjects[updateData.Id])
+
+		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
+		sendPackets(packet, ExcludeClient(client))
 	}
+
 }
 
-func BuildUpdatePackage(gameObj *GameObject) {
-	updateMessage := ObjectMessage{Event: "update", Packet: *gameObj}
-	message, err := json.Marshal(updateMessage)
-	log.Println(string(message))
-	log.Println(err)
-	SendUpdatePackage(message)
+func ExcludeClient(client *websocket.Conn) map[*websocket.Conn]bool {
+	// makes a map with only this one client to pass to sendPackets
+	connections := make(map[*websocket.Conn]bool)
+	connections[client] = true
+	return connections
 }
 
-//TODO: Do some logic to not send data to the client that sent the update message?
-func SendUpdatePackage(message []byte) {
-	sendAll(message)
+func BuildObjectPackage(event string, gameObj *GameObject) []byte {
+	updateMessage := ObjectMessage{Event: event, Packet: *gameObj}
+	message, _ := json.Marshal(updateMessage)
+	return message
+	// SendObjectPackage(message)
 }
+
+// //TODO: Do some logic to not send data to the client that sent the update message?
+// func SendObjectPackage(message []byte) {
+// 	sendPackets(message)
+// }
 
 func ReadCreateMessage(data json.RawMessage) CreateMessage {
 	var dataMessage CreateMessage
