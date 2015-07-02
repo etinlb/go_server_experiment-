@@ -40,8 +40,13 @@ var FancyWebSocket = function(url){
 
   var callbacks = {};
 
-  this.bind = function(event_name, callback){
+  // the this binding is a complete hack
+  this.bind = function(event_name, callback, thisBinding){
     callbacks[event_name] = callbacks[event_name] || [];
+    if(thisBinding)
+    {
+      callback = _.bind(callback, thisBinding)
+    }
     callbacks[event_name].push(callback);
     return this;// chainable
   };

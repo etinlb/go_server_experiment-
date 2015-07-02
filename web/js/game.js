@@ -14,8 +14,8 @@ function Game() {
   this.gameObjects = [];
   this.connection = new FancyWebSocket( settings.webSocketUrl );
   console.log(this.connection.state());
-  this.connection.bind( "add_object", this.addGameObject );
-  this.connection.bind( "update", this.updateRemoteObject )
+  this.connection.bind( "createUnit", this.createGameObj, this );
+  this.connection.bind( "update", this.updateRemoteObject, this )
 };
 
 Game.prototype = {
@@ -24,6 +24,9 @@ Game.prototype = {
     this.drawLoop = _.bind( this.drawLoop, this );
     this.gameLoop = _.bind( this.gameLoop, this );
     this.connectAndStart = _.bind( this.connectAndStart, this );
+    this.createGameObj = _.bind( this.createGameObj, this );
+    this.updateRemoteObject = _.bind( this.updateRemoteObject, this );
+    this.addGameObject = _.bind( this.addGameObject, this );
 
     // drawing parameters
     this.canvas = document.getElementById( settings.canvasId );
@@ -55,11 +58,23 @@ Game.prototype = {
     console.log(evt);
   },
 
-  addGameObject: function( gameObject )
+  createGameObj: function( gameObject )
   {
-    console.log("adding " );
+    console.log("creating" );
     console.log( gameObject );
     // TODO: make a new object
+    var object = new Unit();
+    object.x = gameObject.Rect.x;
+    object.y = gameObject.Rect.y;
+    console.log(this);
+    this.addGameObject( object );
+  },
+
+  addGameObject: function( gameObject )
+  {
+    console.log(this);
+    console.log("adding " );
+    console.log( gameObject );
     this.gameObjects.push( gameObject );
   },
 
