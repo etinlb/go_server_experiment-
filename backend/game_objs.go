@@ -17,8 +17,9 @@ type Message struct {
 }
 
 type CreateMessage struct {
-	X, Y int
-	Id   string
+	X  int    `json:"x"`
+	Y  int    `json:"y"`
+	Id string `json:"id"`
 }
 
 // messages to send back to client...Can't be raw json?
@@ -31,12 +32,13 @@ type ObjectMessage struct {
 // TODO: Learn go better so these and the messages structs could be combined
 // Might have to structure the json data begin sent differently
 type Rect struct {
-	X, Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type GameObject struct {
 	Rect Rect
-	Id   string
+	Id   string `json:"id"`
 }
 
 func HandleEvent(event []byte, client *websocket.Conn) {
@@ -55,7 +57,7 @@ func HandleEvent(event []byte, client *websocket.Conn) {
 		sendPackets(packet, ExcludeClient(client))
 	} else if message.Event == "update" {
 		updateData := ReadCreateMessage(message.Data)
-
+		log.Println(updateData)
 		gameObjects[updateData.Id].Rect.Y = updateData.Y
 		gameObjects[updateData.Id].Rect.X = updateData.X
 

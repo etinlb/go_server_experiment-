@@ -15,6 +15,8 @@ function Game() {
   this.connection = new FancyWebSocket( settings.webSocketUrl );
   console.log(this.connection.state());
 
+  // TODO: Need to make a sync command from the server so it can send all the
+  // game objects that were previously created.
   this.connection.bind( "createUnit", this.createGameObj, this );
   this.connection.bind( "update", this.updateRemoteObject, this )
 };

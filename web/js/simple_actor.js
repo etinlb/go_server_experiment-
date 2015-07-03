@@ -14,8 +14,8 @@ function guid() {
 
 function Unit()
 {
-  this.x = 400;
-  this.y = 400;
+  this.x = 200;
+  this.y = 200;
   this.previous_x = this.x;
   this.previous_y = this.y;
   this.id = guid();
@@ -88,6 +88,12 @@ Unit.prototype =
       id: this.id
     }
     return packet;
+  },
+
+  updatePositionFromPacket: function(packet)
+  {
+    this.x = packet.Rect.x;
+    this.y = packet.Rect.y;
   }
 
 }
