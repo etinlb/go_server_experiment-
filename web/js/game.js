@@ -11,9 +11,10 @@ $(window).load(function() {
 var connectionQueue = [];
 // should read teh settings here maybe?
 function Game() {
-  this.gameObjects = [];
+  this.unitManager = new UnitManager();
   this.connection = new FancyWebSocket( settings.webSocketUrl );
   console.log(this.connection.state());
+
   this.connection.bind( "createUnit", this.createGameObj, this );
   this.connection.bind( "update", this.updateRemoteObject, this )
 };
@@ -38,8 +39,8 @@ Game.prototype = {
 
     connectionQueue.push( {"event":"createUnit", "packet" : player.buildPacket() })
 
-    var gameState = new GameState();
-    this.addGameObject( gameState );
+    // var gameState = new GameState();
+    // this.addGameObject( gameState );
 
     this.connectAndStart();
     if (settings.debug) {
@@ -54,57 +55,52 @@ Game.prototype = {
    */
   updateRemoteObject: function( evt )
   {
-    console.log(this);
-    console.log(evt);
+    this.unitManager.units[evt.id].updatePositionFromPacket(evt);
   },
 
   createGameObj: function( gameObject )
   {
-    console.log("creating" );
-    console.log( gameObject );
-    // TODO: make a new object
     var object = new Unit();
     object.x = gameObject.Rect.x;
     object.y = gameObject.Rect.y;
-    console.log(this);
+    object.id = gameObject.id;
+
     this.addGameObject( object );
   },
 
   addGameObject: function( gameObject )
   {
-    console.log(this);
-    console.log("adding " );
-    console.log( gameObject );
-    this.gameObjects.push( gameObject );
+    this.unitManager.addUnit( gameObject );
   },
 
   gameLoop: function() {
     // TODO: Abstract message sending better
     var packets = [];
+    for( var id in this.unitManager.units )
+    {
+      var unit = this.unitManager.units[id];
+      unit.update();
 
-    for (var i = this.gameObjects.length - 1; i >= 0; i--) {
-      this.gameObjects[i].update();
-
-      if(this.gameObjects[i].dirty())
+      // check if we need to update the server
+      if(this.unitManager.units[id].dirty())
       {
         //TODO: this is awful
         // packets.push(this.gameObjects[i].buildPacket())
-        var packet = this.gameObjects[i].buildPacket();
+        var packet = unit.buildPacket();
         this.connection.send( "update", packet );
       }
-    };
-
-    // separate packet generate loop maybe?
+    }
 
     window.requestAnimationFrame(this.gameLoop); //.bind(this));  
     return;
   },
 
   drawLoop: function() {
-   this.canvas.width = this.canvas.width;
-    for (var i = this.gameObjects.length - 1; i >= 0; i--) {
-      this.gameObjects[i].draw( this.context );
-    };
+    this.canvas.width = this.canvas.width;
+    for( var id in this.unitManager.units )
+    {
+      this.unitManager.units[id].draw( this.context );
+    }
     window.requestAnimationFrame( this.drawLoop ); //.bind(this));
   },
 
