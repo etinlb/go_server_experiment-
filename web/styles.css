@@ -1,9 +1,9 @@
 #gamecontainer {
 	border: 1px solid black;
     left: 50%; 
-    width: 800px; 
-    height: 700px;
-    margin-left: -400px;
+    width: 400px;
+    height: 400px;
+    margin-left: -200px;
     position:absolute;
 
 }
