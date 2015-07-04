@@ -23,6 +23,7 @@ function Unit()
   this.y = 200;
   this.previous_x = this.x;
   this.previous_y = this.y;
+  this.playerControlled = false;
   this.id = guid();
   this.color = "#00FF00";
 }
@@ -43,6 +44,10 @@ Unit.prototype =
   {
     this.saveOldState();
     // key comes from the global
+    if(!this.playerControlled)
+    {
+      return; // nothing else to do
+    }
     // TODO: THIS IS UGLY AS FUCK
     if (KeyListener.isDown(KeyListener.UP)) this.moveUp();
     if (KeyListener.isDown(KeyListener.LEFT)) this.moveLeft();

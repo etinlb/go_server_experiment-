@@ -38,7 +38,9 @@ Game.prototype = {
 
     // read from settings maybe? idk
     var player = new Unit();
+    player.playerControlled = true; // TODO: Figure out a good way to separate players from other units
     this.addGameObject( player );
+
 
     connectionQueue.push( {"event":"createUnit", "packet" : player.buildPacket() })
 
