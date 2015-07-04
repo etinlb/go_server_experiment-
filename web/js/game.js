@@ -19,6 +19,7 @@ function Game() {
   // game objects that were previously created.
   this.connection.bind( "createUnit", this.createGameObj, this );
   this.connection.bind( "update", this.updateRemoteObject, this )
+  this.connection.bind( "sync", this.sync, this )
 };
 
 Game.prototype = {
@@ -58,6 +59,18 @@ Game.prototype = {
   updateRemoteObject: function( evt )
   {
     this.unitManager.units[evt.id].updatePositionFromPacket(evt);
+  },
+
+  sync: function( objectArr )
+  {
+    console.log("syncing");
+    console.log(objectArr.length);
+    for(var i = objectArr.length -1; i >= 0; i-- )
+    {
+      console.log(objectArr[i]);
+      this.createGameObj(objectArr[i]);
+    }
+
   },
 
   createGameObj: function( gameObject )

@@ -12,23 +12,48 @@ import (
 var gameObjects map[string]*GameObject
 
 var connections map[*websocket.Conn]bool
-var broadcastPackets [][]byte // array of packets to send to all connected players
 
-func sendPackets(msg []byte, excludeList map[*websocket.Conn]bool) {
+// map that keeps track of what data came from what client
+var clients map[*websocket.Conn]ClientData
+
+func broadCastPackets(msg []byte, excludeList map[*websocket.Conn]bool) {
 	for conn := range connections {
-
 		if _, ok := excludeList[conn]; ok {
-			log.Println("don't send!")
 			continue
 		}
 
-		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-			log.Println("send!")
-
-			delete(connections, conn)
-			break
-		}
+		sendToClient(msg, conn)
 	}
+}
+
+func sendToClient(msg []byte, conn *websocket.Conn) {
+	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+		log.Println("Deleting")
+		cleanUpSocket(conn)
+	}
+}
+
+func cleanUpSocket(conn *websocket.Conn) {
+	log.Println("Cleaning up")
+	fmt.Println(clients[conn])
+
+	for id, _ := range clients[conn].GameObjects {
+		log.Println("deleting from gameObjects map")
+		delete(gameObjects, id)
+	}
+
+	delete(clients, conn)
+	delete(connections, conn)
+
+	conn.Close()
+	printGameObjectMap()
+}
+
+func initializeConectionVaribles(conn *websocket.Conn) {
+	// initialize the connection
+	connections[conn] = true
+	clients[conn] = ClientData{Client: conn, GameObjects: make(map[string]*GameObject)}
+	SyncClient(conn)
 }
 
 func wsHandler(writer http.ResponseWriter, request *http.Request) {
@@ -42,10 +67,10 @@ func wsHandler(writer http.ResponseWriter, request *http.Request) {
 		log.Println(err)
 		return
 	}
-	connections[conn] = true
 
-	defer conn.Close() // if this function ever exits, close the connection
-	// var messages =
+	initializeConectionVaribles(conn)
+	defer cleanUpSocket(conn) // if this function ever exits, clean up the data
+
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
@@ -63,10 +88,10 @@ func main() {
 	// =========Game Initializations============
 	// keyed by id
 	gameObjects = make(map[string]*GameObject)
+	clients = make(map[*websocket.Conn]ClientData)
 
 	// =========Connection Initializations============
 	connections = make(map[*websocket.Conn]bool)
-	// broadcastPackets = make([][]byte)
 
 	// handle all requests by serving a file of the same name
 	fs := http.Dir(*dir)
@@ -80,4 +105,11 @@ func main() {
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)
 	fmt.Println(err.Error())
+}
+
+func printGameObjectMap() {
+	for _, obj := range gameObjects {
+		log.Println(*obj)
+	}
+
 }
