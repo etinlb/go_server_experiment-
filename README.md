@@ -1,3 +1,3 @@
-# go_server_experiment-
+# What is this
 My attempt at learning go. 
  
