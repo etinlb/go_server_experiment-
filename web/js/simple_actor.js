@@ -12,6 +12,11 @@ function guid() {
   return s4();
 }
 
+var PLAYER_SPEED = {
+  x: 5,
+  y: 5
+};
+
 function Unit()
 {
   this.x = 200;
@@ -47,22 +52,22 @@ Unit.prototype =
 
   moveLeft: function()
   {
-    this.x -= 1;
+    this.x -= PLAYER_SPEED.x;
   },
 
   moveRight: function()
   {
-    this.x += 1;
+    this.x += PLAYER_SPEED.x;
   },
 
   moveUp: function()
   {
-    this.y -= 1;
+    this.y -= PLAYER_SPEED.y;
   },
 
   moveDown: function()
   {
-    this.y += 1;
+    this.y += PLAYER_SPEED.y;
   },
 
   saveOldState: function()
