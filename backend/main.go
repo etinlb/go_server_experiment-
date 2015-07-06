@@ -1,62 +1,37 @@
-package main
+// backend node for managing connections
+package backend
 
 import (
 	// "flag"
-	"flag"
-	"fmt"
-	"github.com/gorilla/websocket"
+	// "flag"
+	// "fmt"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
-var gameObjects map[string]*GameObject
+type cleanUpFunction func(*websocket.Conn)
+type eventHandlerFunction func([]byte, *websocket.Conn)
+type connectionHandlerFunction func(*websocket.Conn)
+
+var cleanUpHandler cleanUpFunction
+var eventHandler eventHandlerFunction
+var conectionHandler connectionHandlerFunction
 
 var connections map[*websocket.Conn]bool
 
-// map that keeps track of what data came from what client
-var clients map[*websocket.Conn]ClientData
-
-func broadCastPackets(msg []byte, excludeList map[*websocket.Conn]bool) {
+func BroadCastPackets(msg []byte, connections map[*websocket.Conn]bool, excludeList map[*websocket.Conn]bool) {
 	for conn := range connections {
 		if _, ok := excludeList[conn]; ok {
 			continue
 		}
 
-		sendToClient(msg, conn)
+		SendToClient(msg, conn)
 	}
 }
 
-func sendToClient(msg []byte, conn *websocket.Conn) {
-	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-		log.Println("Deleting")
-		cleanUpSocket(conn)
-	}
-}
-
-func cleanUpSocket(conn *websocket.Conn) {
-	log.Println("Cleaning up")
-	fmt.Println(clients[conn])
-
-	for id, _ := range clients[conn].GameObjects {
-		log.Println("deleting from gameObjects map")
-		delete(gameObjects, id)
-	}
-
-	delete(clients, conn)
-	delete(connections, conn)
-
-	conn.Close()
-	printGameObjectMap()
-}
-
-func initializeConectionVaribles(conn *websocket.Conn) {
-	// initialize the connection
-	connections[conn] = true
-	clients[conn] = ClientData{Client: conn, GameObjects: make(map[string]*GameObject)}
-	SyncClient(conn)
-}
-
-func wsHandler(writer http.ResponseWriter, request *http.Request) {
+func WsHandler(writer http.ResponseWriter, request *http.Request) {
 	conn, err := websocket.Upgrade(writer, request, nil, 1024, 1024)
 	log.Println("getting a connection")
 
@@ -68,48 +43,28 @@ func wsHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	initializeConectionVaribles(conn)
-	defer cleanUpSocket(conn) // if this function ever exits, clean up the data
+	conectionHandler(conn)
+	defer cleanUpHandler(conn)      // if this function ever exits, clean up the data
+	defer delete(connections, conn) // if this function ever exits, clean up the data
 
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			return
 		}
-		HandleEvent(msg, conn)
+		eventHandler(msg, conn)
 	}
 }
 
-func main() {
-	port := flag.Int("port", 8080, "port to serve on")
-	dir := flag.String("directory", "../web/", "directory of web files")
-	flag.Parse()
-
-	// =========Game Initializations============
-	// keyed by id
-	gameObjects = make(map[string]*GameObject)
-	clients = make(map[*websocket.Conn]ClientData)
-
-	// =========Connection Initializations============
-	connections = make(map[*websocket.Conn]bool)
-
-	// handle all requests by serving a file of the same name
-	fs := http.Dir(*dir)
-	fileHandler := http.FileServer(fs)
-	http.Handle("/", fileHandler)
-	http.HandleFunc("/ws", wsHandler)
-
-	log.Printf("Running on port %d\n", *port)
-
-	addr := fmt.Sprintf("127.0.0.1:%d", *port)
-	// this call blocks -- the progam runs here forever
-	err := http.ListenAndServe(addr, nil)
-	fmt.Println(err.Error())
+func SendToClient(msg []byte, conn *websocket.Conn) {
+	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+		log.Println("Deleting")
+		cleanUpHandler(conn)
+	}
 }
 
-func printGameObjectMap() {
-	for _, obj := range gameObjects {
-		log.Println(*obj)
-	}
-
+func InitHandlerFunctions(event eventHandlerFunction, cleanUp cleanUpFunction, connections connectionHandlerFunction) {
+	cleanUpHandler = cleanUp
+	eventHandler = event
+	conectionHandler = connections
 }

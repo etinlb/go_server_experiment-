@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	// "fmt"
-	"github.com/gorilla/websocket"
 	"log"
+
+	"github.com/etinlb/go_game/backend"
+	"github.com/gorilla/websocket"
 )
 
 type Message struct {
@@ -61,7 +63,7 @@ func HandleEvent(event []byte, client *websocket.Conn) {
 		clients[client].GameObjects[newGameObj.Id] = &newGameObj
 
 		packet := BuildObjectPackage("createUnit", &newGameObj)
-		broadCastPackets(packet, ExcludeClient(client))
+		backend.BroadCastPackets(packet, connections, ExcludeClient(client))
 	} else if message.Event == "update" {
 		updateData := ReadCreateMessage(message.Data)
 
@@ -69,7 +71,7 @@ func HandleEvent(event []byte, client *websocket.Conn) {
 		gameObjects[updateData.Id].Rect.X = updateData.X
 
 		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
-		broadCastPackets(packet, ExcludeClient(client))
+		backend.BroadCastPackets(packet, connections, ExcludeClient(client))
 	}
 }
 
@@ -105,7 +107,7 @@ func SyncClient(client *websocket.Conn) {
 	syncMessage := SyncMessage{Event: "sync", Objects: syncData}
 	syncMessageAsJson, _ := json.Marshal(syncMessage)
 
-	sendToClient(syncMessageAsJson, client)
+	backend.SendToClient(syncMessageAsJson, client)
 }
 
 func BuildObjectPackage(event string, gameObj *GameObject) []byte {
