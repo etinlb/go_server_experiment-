@@ -5,7 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/etinlb/go_game/backend"
 	"github.com/gorilla/websocket"
@@ -40,8 +43,14 @@ func initializeConectionVaribles(conn *websocket.Conn) {
 
 func main() {
 	port := flag.Int("port", 8080, "port to serve on")
+	// TODO: have this address passed from the other server
+	neighborPort := flag.Int("neighbor", 8081, "port to connect to neighbor on")
 	dir := flag.String("directory", "../web/", "directory of web files")
+
 	flag.Parse()
+
+	// TODO: WTF IS THIS SHIT
+	portAsString := strconv.Itoa(*neighborPort)
 
 	// =========Game Initializations============
 	// keyed by id
@@ -59,7 +68,12 @@ func main() {
 	fileHandler := http.FileServer(fs)
 	http.Handle("/", fileHandler)
 	http.HandleFunc("/ws", backend.WsHandler)
-
+	// the socket to read incoming connections from the master server
+	http.HandleFunc("/masterSocket", backend.WsHandler)
+	log.Println(portAsString)
+	connectionUrl := "http://localhost:" + portAsString + "/masterSocket"
+	x := newClientConnection(connectionUrl)
+	log.Println(x)
 	log.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("127.0.0.1:%d", *port)
@@ -72,5 +86,32 @@ func printGameObjectMap() {
 	for _, obj := range gameObjects {
 		log.Println(*obj)
 	}
+}
 
+func newClientConnection(connectionUrl string) (conn *websocket.Conn) {
+	u, err := url.Parse(connectionUrl)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(u)
+
+	log.Println(u.Host)
+	rawConn, err := net.Dial("tcp", u.Host)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	wsHeaders := http.Header{
+		"Origin": {u.Host},
+		// your milage may differ
+		"Sec-WebSocket-Extensions": {"permessage-deflate; client_max_window_bits, x-webkit-deflate-frame"},
+	}
+
+	wsConn, resp, err := websocket.NewClient(rawConn, u, wsHeaders, 1024, 1024)
+
+	if err != nil {
+		fmt.Errorf("websocket.NewClient Error: %s\nResp:%+v", err, resp)
+	}
+	return wsConn
 }

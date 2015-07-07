@@ -72,6 +72,10 @@ func HandleEvent(event []byte, client *websocket.Conn) {
 
 		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
 		backend.BroadCastPackets(packet, connections, ExcludeClient(client))
+	} else if message.Event == "coordinationEvent" {
+
+		log.Println("coordination event")
+		log.Println(message.Data)
 	}
 }
 
