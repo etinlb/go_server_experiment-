@@ -15,26 +15,37 @@ type cleanUpFunction func(*websocket.Conn)
 type eventHandlerFunction func([]byte, *websocket.Conn)
 type connectionHandlerFunction func(*websocket.Conn)
 
-var cleanUpHandler cleanUpFunction
-var eventHandler eventHandlerFunction
-var conectionHandler connectionHandlerFunction
+// a backend controller abstracts handling and managing websocket connections
+type BackendController struct {
+	EventHandler      eventHandlerFunction
+	CleanUpHandler    cleanUpFunction
+	ConnectionHandler connectionHandlerFunction
 
-var connections map[*websocket.Conn]bool
+	connections map[*websocket.Conn]bool
+}
 
-func BroadCastPackets(msg []byte, connections map[*websocket.Conn]bool, excludeList map[*websocket.Conn]bool) {
-	for conn := range connections {
+func NewBackendController(event eventHandlerFunction, cleanUp cleanUpFunction,
+	connections connectionHandlerFunction) BackendController {
+
+	controller := BackendController{EventHandler: event, CleanUpHandler: cleanUp, ConnectionHandler: connections}
+	controller.connections = make(map[*websocket.Conn]bool)
+
+	return controller
+}
+
+func (b BackendController) BroadCastPackets(msg []byte, excludeList map[*websocket.Conn]bool) {
+	for conn := range b.connections {
 		if _, ok := excludeList[conn]; ok {
 			continue
 		}
 
-		SendToClient(msg, conn)
+		b.SendToClient(msg, conn)
 	}
 }
 
-func WsHandler(writer http.ResponseWriter, request *http.Request) {
+func (b BackendController) WsHandler(writer http.ResponseWriter, request *http.Request) {
 	conn, err := websocket.Upgrade(writer, request, nil, 1024, 1024)
 	log.Println("getting a connection")
-
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(writer, "got a websocket handshake", 400)
 		return
@@ -43,28 +54,24 @@ func WsHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	conectionHandler(conn)
-	defer cleanUpHandler(conn)      // if this function ever exits, clean up the data
-	defer delete(connections, conn) // if this function ever exits, clean up the data
+	b.ConnectionHandler(conn)
+	defer b.CleanUpHandler(conn)      // if this function ever exits, clean up the data
+	defer delete(b.connections, conn) // if this function ever exits, clean up the data
+
+	b.connections[conn] = true
 
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			return
 		}
-		eventHandler(msg, conn)
+		b.EventHandler(msg, conn)
 	}
 }
 
-func SendToClient(msg []byte, conn *websocket.Conn) {
+func (b BackendController) SendToClient(msg []byte, conn *websocket.Conn) {
 	if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 		log.Println("Deleting")
-		cleanUpHandler(conn)
+		b.CleanUpHandler(conn)
 	}
-}
-
-func InitHandlerFunctions(event eventHandlerFunction, cleanUp cleanUpFunction, connections connectionHandlerFunction) {
-	cleanUpHandler = cleanUp
-	eventHandler = event
-	conectionHandler = connections
 }

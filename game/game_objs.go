@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	// "fmt"
-	"log"
+	// "log"
 
-	"github.com/etinlb/go_game/backend"
+	// "github.com/etinlb/go_game/backend"
 	"github.com/gorilla/websocket"
 )
 
@@ -50,43 +50,6 @@ type GameObject struct {
 	Id   string `json:"id"`
 }
 
-func HandleEvent(event []byte, client *websocket.Conn) {
-	// TODO: Fix this so it's not just the general interface object
-	var message Message
-	json.Unmarshal(event, &message)
-
-	if message.Event == "createUnit" {
-		log.Println("Creating a new object from " + string(message.Data))
-		newGameObj := MakeObjectFromJson(message.Data)
-
-		gameObjects[newGameObj.Id] = &newGameObj
-		clients[client].GameObjects[newGameObj.Id] = &newGameObj
-
-		packet := BuildObjectPackage("createUnit", &newGameObj)
-		backend.BroadCastPackets(packet, connections, ExcludeClient(client))
-	} else if message.Event == "update" {
-		updateData := ReadCreateMessage(message.Data)
-
-		gameObjects[updateData.Id].Rect.Y = updateData.Y
-		gameObjects[updateData.Id].Rect.X = updateData.X
-
-		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
-		backend.BroadCastPackets(packet, connections, ExcludeClient(client))
-	} else if message.Event == "coordinationEvent" {
-
-		log.Println("coordination event")
-		log.Println(message.Data)
-	}
-}
-
-func ExcludeClient(client *websocket.Conn) map[*websocket.Conn]bool {
-	// makes a map with only this one client to pass to sendPackets
-	connections := make(map[*websocket.Conn]bool)
-	connections[client] = true
-
-	return connections
-}
-
 func MakeCreateMessage(obj GameObject) CreateMessage {
 	message := CreateMessage{X: obj.Rect.X, Y: obj.Rect.Y, Id: obj.Id}
 
@@ -111,7 +74,7 @@ func SyncClient(client *websocket.Conn) {
 	syncMessage := SyncMessage{Event: "sync", Objects: syncData}
 	syncMessageAsJson, _ := json.Marshal(syncMessage)
 
-	backend.SendToClient(syncMessageAsJson, client)
+	clientBackend.SendToClient(syncMessageAsJson, client)
 }
 
 func BuildObjectPackage(event string, gameObj *GameObject) []byte {
