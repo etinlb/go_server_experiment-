@@ -3,6 +3,7 @@ package main
 import (
 	// "flag"
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -23,6 +24,15 @@ var connections map[*websocket.Conn]bool
 var clients map[*websocket.Conn]ClientData
 
 var clientBackend backend.BackendController
+
+type NeighborServer struct {
+	Port int `json:"port"`
+	Ip   string
+}
+
+type NeighborServerList struct {
+	Servers []NeighborServer `json:"servers"`
+}
 
 func cleanUpSocket(conn *websocket.Conn) {
 	for id, _ := range clients[conn].GameObjects {
@@ -90,6 +100,7 @@ func jackIn(port int) {
 	jsonStr := "{\"port\":" + strconv.Itoa(port) + "}"
 	log.Println(jsonStr)
 	var jsonByte = []byte(jsonStr)
+
 	req, err := http.NewRequest("POST", masterUrl, bytes.NewBuffer(jsonByte))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -100,12 +111,22 @@ func jackIn(port int) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Print("%v", resp.Body)
-	fmt.Print("%v", err)
+	var neighbors NeighborServerList
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&neighbors)
+
+	if err != nil {
+		fmt.Print("%v\n", err)
+		panic(err)
+	}
+
+	fmt.Printf("%+v\n", neighbors)
 }
 
-func setUpNeighborConnections() {
-
+func setUpNeighborConnections(neighbors NeighborServerList) {
+	for neighbor := range neighbors.Servers {
+		fmt.Printf("%+v\n", neighbor)
+	}
 }
 
 func printGameObjectMap() {

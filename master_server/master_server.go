@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	// "github.com/etinlb/go_game/backend"
 	// "github.com/gorilla/websocket"
@@ -43,12 +44,19 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	log.Println("Client connecting from " + req.RemoteAddr + ": using port : " +
 		strconv.Itoa(clientData.Port))
 
-	clientData.Ip = req.RemoteAddr
+	// clientData.Ip = req.RemoteAddr
+	clientData.Ip = strings.Split(req.RemoteAddr, ":")[0]
 
 	serverList := readServerList(serverFile)
-	fmt.Printf("%v", serverList)
+	filteredList := filterOutClientServer(clientData, serverList)
+	// remove the currently connecting server in case it was
+	// TODO: DO way more logic to get it's neighbors and such
 
-	response, err := json.Marshal(serverList)
+	// fmt.Printf("%v+\n", filteredList)
+	// fmt.Printf("%v", req.RemoteAddr)
+	// fmt.Printf("%v", req.Host)
+
+	response, err := json.Marshal(filteredList)
 
 	log.Println(string(response))
 
@@ -59,9 +67,42 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 
-	serverList.Servers = append(serverList.Servers, clientData)
+	serverList = addServerIfNotDuplicate(clientData, serverList)
 	writeServerList(serverList)
 
+}
+
+// TODO: integrate this with the addserer if not duplicate, they are doing the same thing
+// return a slice without the passed in client
+func filterOutClientServer(serverToFilter ClientServer, serverList ClientServerList) ClientServerList {
+	var newList ClientServerList
+	newList.Servers = serverList.Servers[:0]
+	// fmt.Printf("%v+\n", newList)
+	// fmt.Printf("%v+\n", serverToFilter)
+
+	for _, server := range serverList.Servers {
+
+		fmt.Printf("%+v\n", server)
+		fmt.Printf("%+v\n", serverToFilter)
+		if server.Port != serverToFilter.Port || server.Ip != serverToFilter.Ip {
+			log.Println("here")
+			newList.Servers = append(newList.Servers, server)
+		}
+	}
+	return newList
+}
+
+func addServerIfNotDuplicate(serverToAdd ClientServer, serverList ClientServerList) ClientServerList {
+	for _, server := range serverList.Servers {
+		if server.Port == serverToAdd.Port && server.Ip == serverToAdd.Ip {
+			return serverList
+		}
+	}
+
+	var newServerList ClientServerList
+	newServerList.Servers = append(serverList.Servers, serverToAdd)
+
+	return newServerList
 }
 
 // TODO: Write to a database rather than file
