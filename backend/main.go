@@ -4,9 +4,12 @@ package backend
 import (
 	// "flag"
 	// "flag"
-	// "fmt"
+	"errors"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/websocket"
 )
@@ -25,15 +28,19 @@ type BackendController struct {
 }
 
 func NewBackendController(event eventHandlerFunction, cleanUp cleanUpFunction,
+
 	connections connectionHandlerFunction) BackendController {
 
-	controller := BackendController{EventHandler: event, CleanUpHandler: cleanUp, ConnectionHandler: connections}
+	controller := BackendController{EventHandler: event, CleanUpHandler: cleanUp,
+		ConnectionHandler: connections}
+
 	controller.connections = make(map[*websocket.Conn]bool)
 
 	return controller
 }
 
 func (b BackendController) BroadCastPackets(msg []byte, excludeList map[*websocket.Conn]bool) {
+
 	for conn := range b.connections {
 		if _, ok := excludeList[conn]; ok {
 			continue
@@ -74,4 +81,43 @@ func (b BackendController) SendToClient(msg []byte, conn *websocket.Conn) {
 		log.Println("Deleting")
 		b.CleanUpHandler(conn)
 	}
+}
+
+// adds a connection to the connection map.
+func (b BackendController) AddNewConnection(conn *websocket.Conn) {
+	b.connections[conn] = true
+}
+
+func (b BackendController) NewWebsocket(connectionUrl string) (*websocket.Conn, error) {
+	u, err := url.Parse(connectionUrl)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("Cannot parse connection url" + connectionUrl)
+	}
+	log.Println(u)
+
+	log.Println(u.Host)
+	rawConn, err := net.Dial("tcp", u.Host)
+	if err != nil {
+		log.Println(err)
+		return nil, errors.New("cannot dial " + u.Host)
+	}
+
+	wsHeaders := http.Header{
+		"Origin": {u.Host},
+		// your milage may differ
+		"Sec-WebSocket-Extensions": {"permessage-deflate; client_max_window_bits, x-webkit-deflate-frame"},
+	}
+
+	wsConn, resp, err := websocket.NewClient(rawConn, u, wsHeaders, 1024, 1024)
+
+	if err != nil {
+
+		return nil, fmt.Errorf("websocket.NewClient Error: %s\nResp:%+v", err, resp)
+
+	}
+
+	b.AddNewConnection(wsConn)
+
+	return wsConn, nil
 }

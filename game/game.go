@@ -24,6 +24,9 @@ var connections map[*websocket.Conn]bool
 var clients map[*websocket.Conn]ClientData
 
 var clientBackend backend.BackendController
+var serverBackend backend.BackendController
+
+var neighbors NeighborServerList
 
 type NeighborServer struct {
 	Port int `json:"port"`
@@ -53,9 +56,6 @@ func main() {
 	dir := flag.String("directory", "../web/", "directory of web files")
 	flag.Parse()
 
-	// XXX
-	jackIn(*port)
-
 	// TODO: WTF IS THIS SHIT
 	// portAsString := strconv.Itoa(*neighborPort)
 
@@ -79,6 +79,9 @@ func main() {
 		cleanUpSocket,
 		initializeServerData) // why doesn't go format align the arguments!
 
+	neighbors = jackIn(*port)
+	setUpNeighborConnections(neighbors)
+
 	// handle all requests by serving a file of the same name
 	fs := http.Dir(*dir)
 	fileHandler := http.FileServer(fs)
@@ -96,7 +99,7 @@ func main() {
 }
 
 // register with the master server and get a list of neighbors to start connections with
-func jackIn(port int) {
+func jackIn(port int) NeighborServerList {
 	jsonStr := "{\"port\":" + strconv.Itoa(port) + "}"
 	log.Println(jsonStr)
 	var jsonByte = []byte(jsonStr)
@@ -121,11 +124,14 @@ func jackIn(port int) {
 	}
 
 	fmt.Printf("%+v\n", neighbors)
+
+	return neighbors
 }
 
 func setUpNeighborConnections(neighbors NeighborServerList) {
-	for neighbor := range neighbors.Servers {
-		fmt.Printf("%+v\n", neighbor)
+	for _, neighbor := range neighbors.Servers {
+		url := "http://" + neighbor.Ip + ":" + strconv.Itoa(neighbor.Port) + "/masterSocket"
+		serverBackend.NewWebsocket(url)
 	}
 }
 
