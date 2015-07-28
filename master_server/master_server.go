@@ -48,17 +48,15 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	clientData.Ip = strings.Split(req.RemoteAddr, ":")[0]
 
 	serverList := readServerList(serverFile)
-	filteredList := filterOutClientServer(clientData, serverList)
-	// remove the currently connecting server in case it was
-	// TODO: DO way more logic to get it's neighbors and such
 
-	// fmt.Printf("%v+\n", filteredList)
-	// fmt.Printf("%v", req.RemoteAddr)
-	// fmt.Printf("%v", req.Host)
+	// remove the currently connecting server in case it was
+	filteredList := filterOutClientServer(clientData, serverList)
+
+	// TODO: DO way more logic to get it's neighbors and such
 
 	response, err := json.Marshal(filteredList)
 
-	log.Println(string(response))
+	log.Println("Sending back " + string(response))
 
 	if err != nil {
 		log.Println(err)
@@ -76,19 +74,14 @@ func handler(w http.ResponseWriter, req *http.Request) {
 // return a slice without the passed in client
 func filterOutClientServer(serverToFilter ClientServer, serverList ClientServerList) ClientServerList {
 	var newList ClientServerList
-	newList.Servers = serverList.Servers[:0]
-	// fmt.Printf("%v+\n", newList)
-	// fmt.Printf("%v+\n", serverToFilter)
+	// newList.Servers = make([]ClientServer)
 
 	for _, server := range serverList.Servers {
-
-		fmt.Printf("%+v\n", server)
-		fmt.Printf("%+v\n", serverToFilter)
 		if server.Port != serverToFilter.Port || server.Ip != serverToFilter.Ip {
-			log.Println("here")
 			newList.Servers = append(newList.Servers, server)
 		}
 	}
+
 	return newList
 }
 
@@ -100,6 +93,8 @@ func addServerIfNotDuplicate(serverToAdd ClientServer, serverList ClientServerLi
 	}
 
 	var newServerList ClientServerList
+	log.Println("adding server to json")
+	fmt.Printf("%+v", serverToAdd)
 	newServerList.Servers = append(serverList.Servers, serverToAdd)
 
 	return newServerList
@@ -128,7 +123,9 @@ func writeServerList(input ClientServerList) {
 	}
 
 	err := ioutil.WriteFile(serverFile, j, 0644)
-	log.Println(err)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func main() {
