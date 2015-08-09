@@ -8,7 +8,7 @@ var settings =
   backgroundImage: null, // no background image yet
 
   // network settings
-  webSocketUrl: "ws://localhost:8080/ws",
+  webSocketUrl: "ws://localhost:8080/ws", // the websocket passed to the
   severUrl: "localhost:8080",
 
   // do debugy things

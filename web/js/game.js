@@ -6,9 +6,15 @@ $(window).load(function() {
   this.game = new Game();
   game.init();
 });
-
+var debug = true;
 // TODO: put this somewhere else
 var connectionQueue = [];
+var lastNetworkingUpdate = new Date();
+var lastDrawUpdate = new Date();
+var networkingFps = 30;
+var drawingFps = 30;
+
+
 // should read teh settings here maybe?
 function Game() {
   this.unitManager = new UnitManager();
@@ -36,6 +42,11 @@ Game.prototype = {
     this.canvas = document.getElementById( settings.canvasId );
     this.context = this.canvas.getContext( '2d' );
 
+    // frame rate debug
+    this.drawFrameRate = new FrameRateTracker("drawfps");
+    this.networkRate = new FrameRateTracker("networkfps");
+
+
     // read from settings maybe? idk
     var player = new Unit();
     player.playerControlled = true; // TODO: Figure out a good way to separate players from other units
@@ -61,6 +72,11 @@ Game.prototype = {
   updateRemoteObject: function( evt )
   {
     this.unitManager.units[evt.id].updatePositionFromPacket(evt);
+
+    if(debug){
+      this.debugNetwork();
+    }
+
   },
 
   sync: function( objectArr )
@@ -118,6 +134,11 @@ Game.prototype = {
     {
       this.unitManager.units[id].draw( this.context );
     }
+
+    if(debug){
+      this.debugDraw();
+    }
+
     window.requestAnimationFrame( this.drawLoop ); //.bind(this));
   },
 
@@ -149,7 +170,13 @@ Game.prototype = {
   },
 
   debugDraw: function() {
+    this.drawFrameRate.updateFrameRate();
     return;
+  },
+
+  debugNetwork: function(){
+    this.networkRate.updateFrameRate();
   }
+
 };
 
