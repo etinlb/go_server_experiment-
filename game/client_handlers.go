@@ -19,6 +19,7 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 	if message.Event == "createUnit" {
 		log.Println("Creating a new object from " + string(message.Data))
 		newGameObj := MakeObjectFromJson(message.Data)
+		log.Println(newGameObj.X)
 
 		gameObjects[newGameObj.Id] = &newGameObj
 		clients[client].GameObjects[newGameObj.Id] = &newGameObj
@@ -28,8 +29,7 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 	} else if message.Event == "update" {
 		updateData := ReadCreateMessage(message.Data)
 
-		gameObjects[updateData.Id].Rect.Y = updateData.Y
-		gameObjects[updateData.Id].Rect.X = updateData.X
+		gameObjects[updateData.Id].Update()
 
 		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
 		clientBackend.BroadCastPackets(packet, ExcludeClient(client))
@@ -39,7 +39,7 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 func initializeClientData(conn *websocket.Conn) {
 	// initialize the connection
 	connections[conn] = true
-	clients[conn] = ClientData{Client: conn, GameObjects: make(map[string]*GameObject)}
+	clients[conn] = ClientData{Client: conn, GameObjects: make(map[string]GameObject)}
 	SyncClient(conn)
 }
 

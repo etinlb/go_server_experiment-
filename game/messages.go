@@ -17,7 +17,7 @@ type Message struct {
 // keeps track of data from a client
 type ClientData struct {
 	Client      *websocket.Conn
-	GameObjects map[string]*GameObject
+	GameObjects map[string]GameObject
 }
 
 type CreateMessage struct {
@@ -38,23 +38,11 @@ type ObjectMessage struct {
 	Packet GameObject `json:"data"`
 }
 
-// TODO: Learn go better so these and the messages structs could be combined
-// Might have to structure the json data begin sent differently
-type Rect struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
+// func MakeCreateMessage(obj GameObject) CreateMessage {
+// 	message := CreateMessage{X: obj.X, Y: obj.Y, Id: obj.Id}
 
-type GameObject struct {
-	Rect Rect
-	Id   string `json:"id"`
-}
-
-func MakeCreateMessage(obj GameObject) CreateMessage {
-	message := CreateMessage{X: obj.Rect.X, Y: obj.Rect.Y, Id: obj.Id}
-
-	return message
-}
+// 	return message
+// }
 
 // send all game objects that are currently in the game object map to the
 // client connected
@@ -67,7 +55,7 @@ func SyncClient(client *websocket.Conn) {
 		}
 
 		for _, obj := range connData.GameObjects {
-			syncData = append(syncData, *obj)
+			syncData = append(syncData, obj)
 		}
 	}
 
@@ -77,8 +65,8 @@ func SyncClient(client *websocket.Conn) {
 	clientBackend.SendToClient(syncMessageAsJson, client)
 }
 
-func BuildObjectPackage(event string, gameObj *GameObject) []byte {
-	updateMessage := ObjectMessage{Event: event, Packet: *gameObj}
+func BuildObjectPackage(event string, gameObj GameObject) []byte {
+	updateMessage := ObjectMessage{Event: event, Packet: gameObj}
 	message, _ := json.Marshal(updateMessage)
 
 	return message
@@ -91,22 +79,9 @@ func ReadCreateMessage(data json.RawMessage) CreateMessage {
 	return dataMessage
 }
 
-func MakeObjectFromJson(data json.RawMessage) GameObject {
+func MakeObjectFromJson(data json.RawMessage) MovableObject {
 	dataMessage := ReadCreateMessage(data)
 	gameObject := NewGameObject(dataMessage.X, dataMessage.Y, dataMessage.Id)
 
 	return gameObject
-}
-
-func NewGameObject(x, y int, id string) GameObject {
-	rect := MakeRect(x, y)
-	gameObject := GameObject{Rect: rect, Id: id}
-
-	return gameObject
-}
-
-func MakeRect(x, y int) Rect {
-	rect := Rect{X: x, Y: y}
-
-	return rect
 }

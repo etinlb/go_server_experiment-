@@ -16,7 +16,7 @@ import (
 
 const masterUrl = "http://localhost:4000/jackIn"
 
-var gameObjects map[string]*GameObject
+var gameObjects map[string]GameObject
 
 var connections map[*websocket.Conn]bool
 
@@ -61,7 +61,7 @@ func main() {
 
 	// =========Game Initializations============
 	// keyed by id
-	gameObjects = make(map[string]*GameObject)
+	gameObjects = make(map[string]GameObject)
 	clients = make(map[*websocket.Conn]ClientData)
 
 	// =========Connection Initializations============
@@ -93,6 +93,7 @@ func main() {
 	log.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", *port)
+	GameLoop()
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)
 	fmt.Println(err.Error())
@@ -137,6 +138,6 @@ func setUpNeighborConnections(neighbors NeighborServerList) {
 
 func printGameObjectMap() {
 	for _, obj := range gameObjects {
-		log.Println(*obj)
+		log.Println(obj)
 	}
 }
