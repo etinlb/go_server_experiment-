@@ -10,6 +10,10 @@ type GameObject interface {
 	Update()
 }
 
+type Mover interface {
+	Move(xVel, yVel int)
+}
+
 type Rect struct {
 	X int `json:"x"`
 	Y int `json:"y"`
@@ -22,12 +26,25 @@ type BaseGameObjData struct {
 type MovableObject struct {
 	BaseGameObjData
 	Rect
-	XVel int
-	YVel int
+	XVel int `json:"xVel"`
+	YVel int `json:"yVel"`
 }
 
-func (MovableObject) Update() {
-	fmt.Printf("here")
+func (m *MovableObject) Update() {
+	// yeah
+	fmt.Printf("%+v IN Update\n", m)
+	m.X += m.XVel
+	m.Y += m.YVel
+	fmt.Printf("%+v After moving\n", m)
+
+}
+
+func (m *MovableObject) Move(xVel, yVel int) {
+	// yeah
+	fmt.Printf("%+v IN MOVe\n", m)
+	m.XVel = xVel
+	m.YVel = yVel
+	fmt.Printf("%+v After Moving\n", m)
 }
 
 func NewGameObject(x, y int, id string) MovableObject {

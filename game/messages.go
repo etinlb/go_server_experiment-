@@ -26,6 +26,12 @@ type CreateMessage struct {
 	Id string `json:"id"`
 }
 
+type MoveMessage struct {
+	XVel int    `json:"xVel"`
+	YVel int    `json:"yVel"`
+	Id   string `json:"id"`
+}
+
 type SyncMessage struct {
 	Event   string       `json:"event"` // client works with lowercase
 	Objects []GameObject `json:"data"`
@@ -77,6 +83,14 @@ func ReadCreateMessage(data json.RawMessage) CreateMessage {
 	json.Unmarshal(data, &dataMessage)
 
 	return dataMessage
+}
+
+func ReadMoveMessage(data json.RawMessage) MoveMessage {
+	var dataMessage MoveMessage
+	json.Unmarshal(data, &dataMessage)
+
+	return dataMessage
+
 }
 
 func MakeObjectFromJson(data json.RawMessage) MovableObject {

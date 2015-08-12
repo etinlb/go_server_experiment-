@@ -120,7 +120,7 @@ Game.prototype = {
         //TODO: this is awful
         // packets.push(this.gameObjects[i].buildPacket())
         var packet = unit.buildPacket();
-        this.connection.send( "update", packet );
+        this.connection.send( "move", packet );
       }
     }
 

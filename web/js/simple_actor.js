@@ -21,6 +21,8 @@ function Unit()
 {
   this.x = 200;
   this.y = 200;
+  this.xVel = 0;
+  this.yVel = 0;
   this.previous_x = this.x;
   this.previous_y = this.y;
   this.playerControlled = false;
@@ -48,6 +50,7 @@ Unit.prototype =
     {
       return; // nothing else to do
     }
+    // return;
     // TODO: THIS IS UGLY AS FUCK
     if (KeyListener.isDown(KeyListener.UP)) this.moveUp();
     if (KeyListener.isDown(KeyListener.LEFT)) this.moveLeft();
@@ -57,22 +60,22 @@ Unit.prototype =
 
   moveLeft: function()
   {
-    this.x -= PLAYER_SPEED.x;
+    this.xVel = PLAYER_SPEED.x * -1;
   },
 
   moveRight: function()
   {
-    this.x += PLAYER_SPEED.x;
+    this.xVel = PLAYER_SPEED.x;
   },
 
   moveUp: function()
   {
-    this.y -= PLAYER_SPEED.y;
+    this.yVel = PLAYER_SPEED.y * -1;
   },
 
   moveDown: function()
   {
-    this.y += PLAYER_SPEED.y;
+    this.yVel = PLAYER_SPEED.y;
   },
 
   saveOldState: function()
@@ -83,6 +86,7 @@ Unit.prototype =
 
   dirty: function()
   {
+    return true;
     // returns if the object has been updated at all
     // Currently just for movement
     return this.x != this.previous_x ||
@@ -95,6 +99,8 @@ Unit.prototype =
     {
       x: this.x,
       y: this.y,
+      xVel: this.xVel,
+      yVel: this.yVel,
       id: this.id
     }
     return packet;
@@ -102,8 +108,9 @@ Unit.prototype =
 
   updatePositionFromPacket: function(packet)
   {
-    this.x = packet.Rect.x;
-    this.y = packet.Rect.y;
+    console.log("getting posistion from packet");
+    this.x = packet.x;
+    this.y = packet.y;
   }
 
 }

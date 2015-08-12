@@ -3,7 +3,7 @@ package main
 
 import (
 	"encoding/json"
-	// "fmt"
+	"fmt"
 	"log"
 
 	// "github.com/etinlb/go_game/backend"
@@ -28,11 +28,23 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 		clientBackend.BroadCastPackets(packet, ExcludeClient(client))
 	} else if message.Event == "update" {
 		updateData := ReadCreateMessage(message.Data)
-
-		gameObjects[updateData.Id].Update()
+		log.Println("In update loop")
+		// gameObjects[updateData.Id].Update()
 
 		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
 		clientBackend.BroadCastPackets(packet, ExcludeClient(client))
+	} else if message.Event == "move" {
+		// The client requested moving
+		log.Println("moving with this packet")
+		log.Println(string(message.Data))
+
+		updateData := ReadMoveMessage(message.Data)
+		fmt.Printf("%+v Reed this message\n", updateData)
+
+		if mover, ok := gameObjects[updateData.Id].(Mover); ok {
+
+			mover.Move(updateData.XVel, updateData.YVel)
+		}
 	}
 }
 
