@@ -16,7 +16,10 @@ import (
 
 const masterUrl = "http://localhost:4000/jackIn"
 
+// various object maps to keep track of different types of objects
 var gameObjects map[string]GameObject
+var playerObjects map[string]*Player
+var physicsComponents map[string]*PhysicsComponent
 
 var connections map[*websocket.Conn]bool
 
@@ -62,6 +65,9 @@ func main() {
 	// =========Game Initializations============
 	// keyed by id
 	gameObjects = make(map[string]GameObject)
+	playerObjects = make(map[string]*Player)
+	physicsComponents = make(map[string]*PhysicsComponent)
+
 	clients = make(map[*websocket.Conn]ClientData)
 
 	// =========Connection Initializations============

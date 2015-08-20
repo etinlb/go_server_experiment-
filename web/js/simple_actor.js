@@ -12,11 +12,6 @@ function guid() {
   return s4();
 }
 
-var PLAYER_SPEED = {
-  x: 5,
-  y: 5
-};
-
 function Unit()
 {
   this.x = 200;
@@ -52,10 +47,10 @@ Unit.prototype =
     }
     // return;
     // TODO: THIS IS UGLY AS FUCK
-    if (KeyListener.isDown(KeyListener.UP)) this.moveUp();
-    if (KeyListener.isDown(KeyListener.LEFT)) this.moveLeft();
-    if (KeyListener.isDown(KeyListener.DOWN)) this.moveDown();
-    if (KeyListener.isDown(KeyListener.RIGHT)) this.moveRight();
+    // if (KeyListener.isDown(KeyListener.UP)) this.moveUp();
+    // if (KeyListener.isDown(KeyListener.LEFT)) this.moveLeft();
+    // if (KeyListener.isDown(KeyListener.DOWN)) this.moveDown();
+    // if (KeyListener.isDown(KeyListener.RIGHT)) this.moveRight();
   },
 
   moveLeft: function()

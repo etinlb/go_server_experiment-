@@ -14,12 +14,15 @@ var lastDrawUpdate = new Date();
 var networkingFps = 30;
 var drawingFps = 30;
 
-
 // should read teh settings here maybe?
 function Game() {
   this.unitManager = new UnitManager();
   this.connection = new FancyWebSocket( settings.webSocketUrl );
   console.log(this.connection.state());
+  this.events = [];
+
+  // Probably the neatest javascript library I've seen. I hate user input with javascript...
+  this.setupKeyListener();
 
   // TODO: Need to make a sync command from the server so it can send all the
   // game objects that were previously created.
@@ -29,6 +32,7 @@ function Game() {
 };
 
 Game.prototype = {
+  // TODO: Why is this init and not in the constructor?
   init: function() {
     // I hate javascripts hacked up object model.
     this.drawLoop = _.bind( this.drawLoop, this );
@@ -37,6 +41,8 @@ Game.prototype = {
     this.createGameObj = _.bind( this.createGameObj, this );
     this.updateRemoteObject = _.bind( this.updateRemoteObject, this );
     this.addGameObject = _.bind( this.addGameObject, this );
+    // this.handleKeyDown = _.bind( this.handleKeyDown, this );
+    // this.handleKeyUp = _.bind( this.handleKeyUp, this );
 
     // drawing parameters
     this.canvas = document.getElementById( settings.canvasId );
@@ -47,13 +53,13 @@ Game.prototype = {
     this.networkRate = new FrameRateTracker("networkfps");
 
 
-    // read from settings maybe? idk
-    var player = new Unit();
-    player.playerControlled = true; // TODO: Figure out a good way to separate players from other units
-    this.addGameObject( player );
+    // TODO: read from settings maybe?
+    // TODO: Actually, move to the component base system you had in the other failed game
+    // and have a component called Player Controlled object or something
+    this.player = new Unit();
+    this.addGameObject( this.player );
 
-
-    connectionQueue.push( {"event":"createUnit", "packet" : player.buildPacket() })
+    connectionQueue.push( {"event":"createUnit", "packet" : this.player.buildPacket() })
 
     // var gameState = new GameState();
     // this.addGameObject( gameState );
@@ -163,6 +169,84 @@ Game.prototype = {
       };
       this.play();
     }
+  },
+
+  processEvents: function() {
+  },
+
+  addEvent: function() {
+
+  },
+
+  upKeyDownEvent: function(evt){
+    var key = evt.keyCode;
+    switch(key) {
+      case settings.KEY.LEFT:
+        this.sendMoveEvent(-1, 0);
+        break;
+      case settings.KEY.RIGHT:
+        this.sendMoveEvent(1, 0);
+        break;
+      case settings.KEY.UP:
+        this.sendMoveEvent(0, -1);
+        break;
+      case settings.KEY.DOWN:
+        this.sendMoveEvent(0, 1);
+        break;
+      case settings.KEY.SPACE:
+        break;
+    }
+  },
+
+  upKeyUpEvent: function(evt){
+    var key = evt.keyCode;
+    switch(key) {
+      case settings.KEY.LEFT:
+        this.sendMoveEvent(1, 0);
+        break;
+      case settings.KEY.RIGHT:
+        this.sendMoveEvent(-1, 0);
+        break;
+      case settings.KEY.UP:
+        this.sendMoveEvent(0, 1);
+        break;
+      case settings.KEY.DOWN:
+        this.sendMoveEvent(0, -1);
+        break;
+      case settings.KEY.SPACE:
+        break;
+    }
+  },
+
+  // sends a move event for the player.
+  // TODO: batch messages like this to send all at once from the client
+  sendMoveEvent: function(forceX, forceY) {
+    console.log("Sending move event with this force");
+    var packet = {
+      xVel: forceX,
+      yVel: forceY,
+      id: this.player.id
+    };
+    this.connection.send( "move", packet );
+  },
+
+  // TODO: component maybe?
+  setupKeyListener: function() {
+
+    var my_defaults = {
+      prevent_repeat  : true,
+      this            : this,
+      on_keydown      : this.upKeyDownEvent,
+      on_keyup        : this.upKeyUpEvent
+    };
+
+    this.keyListener = new window.keypress.Listener( "", my_defaults);
+    this.keyListener.register_many([
+              { "keys" : "up" },
+              { "keys" : "down" },
+              { "keys" : "right" },
+              { "keys" : "left" }
+    ]);
   },
 
   debugInit: function() {

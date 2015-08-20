@@ -16,36 +16,41 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 	var message Message
 	json.Unmarshal(event, &message)
 
-	if message.Event == "createUnit" {
+	if message.Event == "createPlayer" {
 		log.Println("Creating a new object from " + string(message.Data))
-		newGameObj := MakeObjectFromJson(message.Data)
-		log.Println(newGameObj.X)
+		newPlayer := MakePlayerObjectFromJson(message.Data)
+		// log.Println(newGameObj.X)
 
-		gameObjects[newGameObj.Id] = &newGameObj
-		clients[client].GameObjects[newGameObj.Id] = &newGameObj
+		// TODO: Why are we keeping track of this twice?
+		gameObjects[newPlayer.Id] = &newPlayer
+		clients[client].GameObjects[newPlayer.Id] = &newPlayer
+		playerObjects[newPlayer.Id] = &newPlayer
+		physicsComponents[newPlayer.Id] = newPlayer.PhysicsComp
 
-		packet := BuildObjectPackage("createUnit", &newGameObj)
+		packet := BuildObjectPackage("createUnit", &newPlayer)
 		clientBackend.BroadCastPackets(packet, ExcludeClient(client))
-	} else if message.Event == "update" {
-		updateData := ReadCreateMessage(message.Data)
-		log.Println("In update loop")
-		// gameObjects[updateData.Id].Update()
-
-		packet := BuildObjectPackage("update", gameObjects[updateData.Id])
-		clientBackend.BroadCastPackets(packet, ExcludeClient(client))
-	} else if message.Event == "move" {
-		// The client requested moving
-		log.Println("moving with this packet")
-		log.Println(string(message.Data))
-
-		updateData := ReadMoveMessage(message.Data)
-		fmt.Printf("%+v Reed this message\n", updateData)
-
-		if mover, ok := gameObjects[updateData.Id].(Mover); ok {
-
-			mover.Move(updateData.XVel, updateData.YVel)
-		}
+		fmt.Println("B")
 	}
+	// else if message.Event == "update" {
+	// 	updateData := ReadCreateMessage(message.Data)
+	// 	log.Println("In update loop")
+	// 	// gameObjects[updateData.Id].Update()
+
+	// 	packet := BuildObjectPackage("update", *gameObjects[updateData.Id])
+	// 	clientBackend.BroadCastPackets(packet, ExcludeClient(client))
+	// } else if message.Event == "move" {
+	// 	// The client requested moving
+	// 	log.Println("moving with this packet")
+	// 	log.Println(string(message.Data))
+
+	// 	updateData := ReadMoveMessage(message.Data)
+	// 	fmt.Printf("%+v Reed this message\n", updateData)
+
+	// 	// if mover, ok := gameObjects[updateData.Id].(Mover); ok {
+
+	// 	// gameObjects[updateData.Id].(updateData.XVel, updateData.YVel)
+	// 	// }
+	// }
 }
 
 func initializeClientData(conn *websocket.Conn) {

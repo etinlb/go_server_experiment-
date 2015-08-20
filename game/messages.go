@@ -21,15 +21,15 @@ type ClientData struct {
 }
 
 type CreateMessage struct {
-	X  int    `json:"x"`
-	Y  int    `json:"y"`
-	Id string `json:"id"`
+	X  float64 `json:"x"`
+	Y  float64 `json:"y"`
+	Id string  `json:"id"`
 }
 
 type MoveMessage struct {
-	XVel int    `json:"xVel"`
-	YVel int    `json:"yVel"`
-	Id   string `json:"id"`
+	XVel float64 `json:"xVel"`
+	YVel float64 `json:"yVel"`
+	Id   string  `json:"id"`
 }
 
 type SyncMessage struct {
@@ -93,9 +93,9 @@ func ReadMoveMessage(data json.RawMessage) MoveMessage {
 
 }
 
-func MakeObjectFromJson(data json.RawMessage) MovableObject {
-	dataMessage := ReadCreateMessage(data)
-	gameObject := NewGameObject(dataMessage.X, dataMessage.Y, dataMessage.Id)
+// func MakeObjectFromJson(data json.RawMessage) GameObject {
+// 	dataMessage := ReadCreateMessage(data)
+// 	gameObject := NewGameObject(dataMessage.X, dataMessage.Y, dataMessage.Id)
 
-	return gameObject
-}
+// 	return gameObject
+// }
