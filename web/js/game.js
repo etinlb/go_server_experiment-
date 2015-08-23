@@ -26,7 +26,7 @@ function Game() {
 
   // TODO: Need to make a sync command from the server so it can send all the
   // game objects that were previously created.
-  this.connection.bind( "createUnit", this.createGameObj, this );
+  this.connection.bind( "createPlayer", this.createGameObj, this );
   this.connection.bind( "update", this.updateRemoteObject, this )
   this.connection.bind( "sync", this.sync, this )
 };
@@ -59,7 +59,7 @@ Game.prototype = {
     this.player = new Unit();
     this.addGameObject( this.player );
 
-    connectionQueue.push( {"event":"createUnit", "packet" : this.player.buildPacket() })
+    connectionQueue.push( {"event":"createPlayer", "packet" : this.player.buildPacket() })
 
     // var gameState = new GameState();
     // this.addGameObject( gameState );
@@ -120,14 +120,14 @@ Game.prototype = {
       var unit = this.unitManager.units[id];
       unit.update();
 
-      // check if we need to update the server
-      if(this.unitManager.units[id].dirty())
-      {
-        //TODO: this is awful
-        // packets.push(this.gameObjects[i].buildPacket())
-        var packet = unit.buildPacket();
-        this.connection.send( "move", packet );
-      }
+      // // check if we need to update the server
+      // if(this.unitManager.units[id].dirty())
+      // {
+      //   //TODO: this is awful
+      //   // packets.push(this.gameObjects[i].buildPacket())
+      //   var packet = unit.buildPacket();
+      //   this.connection.send( "move", packet );
+      // }
     }
 
     window.requestAnimationFrame(this.gameLoop); //.bind(this));  
@@ -232,7 +232,6 @@ Game.prototype = {
 
   // TODO: component maybe?
   setupKeyListener: function() {
-
     var my_defaults = {
       prevent_repeat  : true,
       this            : this,
@@ -261,6 +260,4 @@ Game.prototype = {
   debugNetwork: function(){
     this.networkRate.updateFrameRate();
   }
-
 };
-

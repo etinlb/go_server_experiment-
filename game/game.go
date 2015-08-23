@@ -21,6 +21,9 @@ var gameObjects map[string]GameObject
 var playerObjects map[string]*Player
 var physicsComponents map[string]*PhysicsComponent
 
+// Communication coordinator
+var channelCoordinator ComunicationChannels
+
 var connections map[*websocket.Conn]bool
 
 // map that keeps track of what data came from what client
@@ -53,28 +56,33 @@ func cleanUpSocket(conn *websocket.Conn) {
 	printGameObjectMap()
 }
 
+func initializeGameData() {
+	// keyed by id
+	gameObjects = make(map[string]GameObject)
+	playerObjects = make(map[string]*Player)
+	physicsComponents = make(map[string]*PhysicsComponent)
+}
+
+// TODO: SHould this be in server vars?
+func initializeConnectionData() {
+	clients = make(map[*websocket.Conn]ClientData)
+	connections = make(map[*websocket.Conn]bool)
+}
+
 func main() {
 	port := flag.Int("port", 8080, "port to serve on")
 	// TODO: have this address passed from the other server
 	dir := flag.String("directory", "../web/", "directory of web files")
 	flag.Parse()
 
-	// TODO: WTF IS THIS SHIT
-	// portAsString := strconv.Itoa(*neighborPort)
-
 	// =========Game Initializations============
-	// keyed by id
-	gameObjects = make(map[string]GameObject)
-	playerObjects = make(map[string]*Player)
-	physicsComponents = make(map[string]*PhysicsComponent)
-
-	clients = make(map[*websocket.Conn]ClientData)
+	initializeGameData()
 
 	// =========Connection Initializations============
-	connections = make(map[*websocket.Conn]bool)
-	initializeServerVars()
+	initializeConnectionData()
 
 	//=========Backend Initializations============
+	initializeServerVars()
 
 	clientBackend = backend.NewBackendController(HandleClientEvent,
 		cleanUpSocket,
@@ -99,7 +107,12 @@ func main() {
 	log.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", *port)
-	GameLoop()
+	moveChannel, addChannel := GameLoop()
+
+	// Add channels to the channel coordinator
+	channelCoordinator = ComunicationChannels{moveChannel: moveChannel, addChannel: addChannel}
+	// fmt.Println(channelCoordinator)
+
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)
 	fmt.Println(err.Error())

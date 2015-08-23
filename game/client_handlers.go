@@ -4,7 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	// "log"
 
 	// "github.com/etinlb/go_game/backend"
 	"github.com/gorilla/websocket"
@@ -16,21 +16,37 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 	var message Message
 	json.Unmarshal(event, &message)
 
-	if message.Event == "createPlayer" {
-		log.Println("Creating a new object from " + string(message.Data))
-		newPlayer := MakePlayerObjectFromJson(message.Data)
-		// log.Println(newGameObj.X)
+	fmt.Println("Handling client data")
 
-		// TODO: Why are we keeping track of this twice?
-		gameObjects[newPlayer.Id] = &newPlayer
-		clients[client].GameObjects[newPlayer.Id] = &newPlayer
-		playerObjects[newPlayer.Id] = &newPlayer
-		physicsComponents[newPlayer.Id] = newPlayer.PhysicsComp
+	channelCoordinator.ProcessEvents(message.Event, message.Data)
+	// if message.Event == "createPlayer" {
+	// 	log.Println("Creating a new object from " + string(message.Data))
+	// 	newPlayer := MakePlayerObjectFromJson(message.Data)
+	// 	// log.Println(newGameObj.X)
 
-		packet := BuildObjectPackage("createUnit", &newPlayer)
-		clientBackend.BroadCastPackets(packet, ExcludeClient(client))
-		fmt.Println("B")
-	}
+	// 	// TODO: Why are we keeping track of this twice?
+	// 	gameObjects[newPlayer.Id] = &newPlayer
+	// 	clients[client].GameObjects[newPlayer.Id] = &newPlayer
+	// 	playerObjects[newPlayer.Id] = &newPlayer
+	// 	physicsComponents[newPlayer.Id] = newPlayer.PhysicsComp
+
+	// 	packet := BuildObjectPackage("createUnit", &newPlayer)
+	// 	clientBackend.BroadCastPackets(packet, ExcludeClient(client))
+	// 	fmt.Println("B")
+	// } else if message.Event == "move" {
+	// 	// The client requested moving
+	// 	log.Println("moving with this packet")
+	// 	log.Println(string(message.Data))
+
+	// 	updateData := ReadMMessage(message.Data)
+	// 	fmt.Printf("%+v Read this message\n", updateData)
+	// 	// gameObjects[updateData.Id].
+
+	// 	// if mover, ok := gameObjects[updateData.Id].(Mover); ok {
+
+	// 	// gameObjects[updateData.Id].(updateData.XVel, updateData.YVel)
+	// 	// }
+	// }
 	// else if message.Event == "update" {
 	// 	updateData := ReadCreateMessage(message.Data)
 	// 	log.Println("In update loop")
@@ -38,18 +54,6 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 
 	// 	packet := BuildObjectPackage("update", *gameObjects[updateData.Id])
 	// 	clientBackend.BroadCastPackets(packet, ExcludeClient(client))
-	// } else if message.Event == "move" {
-	// 	// The client requested moving
-	// 	log.Println("moving with this packet")
-	// 	log.Println(string(message.Data))
-
-	// 	updateData := ReadMoveMessage(message.Data)
-	// 	fmt.Printf("%+v Reed this message\n", updateData)
-
-	// 	// if mover, ok := gameObjects[updateData.Id].(Mover); ok {
-
-	// 	// gameObjects[updateData.Id].(updateData.XVel, updateData.YVel)
-	// 	// }
 	// }
 }
 

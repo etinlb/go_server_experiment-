@@ -26,6 +26,11 @@ type CreateMessage struct {
 	Id string  `json:"id"`
 }
 
+type ClientMessage struct {
+	Id   string `json:"id"`
+	Data json.RawMessage
+}
+
 type MoveMessage struct {
 	XVel float64 `json:"xVel"`
 	YVel float64 `json:"yVel"`
@@ -44,16 +49,11 @@ type ObjectMessage struct {
 	Packet GameObject `json:"data"`
 }
 
-// func MakeCreateMessage(obj GameObject) CreateMessage {
-// 	message := CreateMessage{X: obj.X, Y: obj.Y, Id: obj.Id}
-
-// 	return message
-// }
-
 // send all game objects that are currently in the game object map to the
 // client connected
 func SyncClient(client *websocket.Conn) {
-	syncData := make([]GameObject, 0) // TODO: Assess whether or not this is going to be to slow
+	// TODO: Assess whether or not this is going to be to slow
+	syncData := make([]GameObject, 0)
 
 	for conn, connData := range clients {
 		if conn == client {
@@ -78,6 +78,16 @@ func BuildObjectPackage(event string, gameObj GameObject) []byte {
 	return message
 }
 
+// A message that the object itself will interpret
+// TODO: Talk to joey more about a communication layer
+// func ReadClientMessage(data json.RawMessage) {
+// 	var dataMessage ClientMessage
+// 	json.Unmarshal(data, &dataMessage)
+
+// 	return dataMessage
+
+// }
+
 func ReadCreateMessage(data json.RawMessage) CreateMessage {
 	var dataMessage CreateMessage
 	json.Unmarshal(data, &dataMessage)
@@ -92,10 +102,3 @@ func ReadMoveMessage(data json.RawMessage) MoveMessage {
 	return dataMessage
 
 }
-
-// func MakeObjectFromJson(data json.RawMessage) GameObject {
-// 	dataMessage := ReadCreateMessage(data)
-// 	gameObject := NewGameObject(dataMessage.X, dataMessage.Y, dataMessage.Id)
-
-// 	return gameObject
-// }
