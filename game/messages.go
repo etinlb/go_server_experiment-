@@ -1,11 +1,9 @@
 package main
 
+// TODO: What is this file and why does it exist?
+
 import (
 	"encoding/json"
-	// "fmt"
-	// "log"
-
-	// "github.com/etinlb/go_game/backend"
 	"github.com/gorilla/websocket"
 )
 
@@ -20,21 +18,9 @@ type ClientData struct {
 	GameObjects map[string]GameObject
 }
 
-type CreateMessage struct {
-	X  float64 `json:"x"`
-	Y  float64 `json:"y"`
-	Id string  `json:"id"`
-}
-
 type ClientMessage struct {
 	Id   string `json:"id"`
 	Data json.RawMessage
-}
-
-type MoveMessage struct {
-	XVel float64 `json:"xVel"`
-	YVel float64 `json:"yVel"`
-	Id   string  `json:"id"`
 }
 
 type SyncMessage struct {
@@ -76,29 +62,4 @@ func BuildObjectPackage(event string, gameObj GameObject) []byte {
 	message, _ := json.Marshal(updateMessage)
 
 	return message
-}
-
-// A message that the object itself will interpret
-// TODO: Talk to joey more about a communication layer
-// func ReadClientMessage(data json.RawMessage) {
-// 	var dataMessage ClientMessage
-// 	json.Unmarshal(data, &dataMessage)
-
-// 	return dataMessage
-
-// }
-
-func ReadCreateMessage(data json.RawMessage) CreateMessage {
-	var dataMessage CreateMessage
-	json.Unmarshal(data, &dataMessage)
-
-	return dataMessage
-}
-
-func ReadMoveMessage(data json.RawMessage) MoveMessage {
-	var dataMessage MoveMessage
-	json.Unmarshal(data, &dataMessage)
-
-	return dataMessage
-
 }

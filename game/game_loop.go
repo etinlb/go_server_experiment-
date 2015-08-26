@@ -2,33 +2,8 @@ package main
 
 import (
 	"fmt"
-	// "github.com/gorilla/websocket"
 	"time"
 )
-
-// Various channel structs that are used for communicating with the game and physics loop
-// TODO: Why is this the same as move message in message.go? Maybe make those the same
-type MoveRequest struct {
-	Xvel     int
-	Yvel     int
-	PlayerId string
-}
-
-// Adds an object with the id the game object map
-type AddRequest struct {
-	X        int
-	Y        int
-	PlayerId string
-}
-
-// const time
-// func GameLoopGoRoutine()
-
-// TODO: Figure out some sort of communication from the message thread to the
-// game and physics thread
-func RequestChange(id string) {
-
-}
 
 // Spawns the game loop and returns the channels to comminucate with the game
 // TODO: Currently that is just the move channels, maybe return the ticker channel?
