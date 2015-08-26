@@ -8,52 +8,67 @@ import (
 // Spawns the game loop and returns the channels to comminucate with the game
 // TODO: Currently that is just the move channels, maybe return the ticker channel?
 // TODO: TODO: Make it return channel of channels
-func GameLoop() (chan MoveRequest, chan AddRequest) {
+func StartGameLoop() (chan *MoveRequest, chan *AddRequest) {
 	// about 16 milliseconds for 60 fps a second
-	tickChan := time.NewTicker(time.Millisecond * 1000)
-	moveChannel := make(chan MoveRequest)
-	addChannel := make(chan AddRequest)
+	gameTick := time.NewTicker(time.Millisecond * 1000)
 
+	// Physics runs at 50 fps
+	physicsTick := time.NewTicker(time.Millisecond * 2)
+	timeStep := (time.Millisecond * 2).Seconds()
+
+	moveChannel := make(chan *MoveRequest)
+	addChannel := make(chan *AddRequest)
+
+	// actual Game Loop. TODO: Should this be a function call?
 	go func() {
-		lastTime := time.Now()
 		// Run the game loop forever.
-		for t := range tickChan.C {
-			fmt.Printf("%+v: ", t)
-			fmt.Printf("%+v\n", addChannel)
+		for range gameTick.C {
 
+			// NOTE TO FUTURE SELF: if multiple channels are ready, select will
+			// pick one randomly and move on!! There are a few solutions I can see
+			// to help this. First, have a select for each channel or read the
+			// channels outside of the game loop.
 			select {
-			case msg := <-moveChannel:
-				fmt.Printf("%+v", msg)
 			case msg := <-addChannel:
 				fmt.Printf("Added!!!!!! %+v\n", msg)
 			default:
 				// Move on to other things
-
 			}
-			// update time vars
-			timeElapsed := time.Since(lastTime).Seconds()
-			lastTime = t
-			// fmt.Printf("%+v T is\n", time.Since(lastTime).Seconds())
-			DoPhysics(timeElapsed)
-			lastTime = t
 		}
 	}()
-	fmt.Println("Started Game Loop Go Routine atlkj ")
-	return moveChannel, addChannel
 
+	// Start phyics loop, give it the movement channel and it's ticker
+	go PhysicsLoop(physicsTick, moveChannel, timeStep)
+
+	fmt.Println("Started Game Loop Go Routine atlkj ")
+
+	return moveChannel, addChannel
 }
 
-// TODO: Pass in the game objects as to be simulated rather than dangerously reading
-// from the gameObjects global map
-func DoPhysics(timePassed float64) {
-	// TODO: figure out the implication of multi threading this yeah, this is
+// Physics loops listens from move requests and
+func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveRequest, timeStep float64) {
+	frameSimulated := 0
+	for range physicsTick.C {
+		// Read any movement updates
+		select {
+		case msg := <-moveChannel:
+			fmt.Printf("Physics doing movement%+v\n", msg)
+		default:
+			// Move on to other things
+		}
+
+		TickPhysics(timeStep)
+		// TODO: Send this to a channel after reading an event so we can listen
+		// in and know exactly which tick the event was registered
+		frameSimulated++
+	}
+}
+
+// Ticks the physics engine once by time elapsed
+func TickPhysics(timeElapsed float64) {
 	for _, gameObj := range physicsComponents {
 		// Basic movement for now
-		gameObj.X += gameObj.XVel * timePassed
-		gameObj.Y += gameObj.YVel * timePassed
-		// TODO: This is dumb
-		// packet := BuildObjectPackage("update", *gameObj)
-		// clientBackend.BroadCastPackets(packet, make(map[*websocket.Conn]bool))
+		gameObj.X += gameObj.XVel * timeElapsed
+		gameObj.Y += gameObj.YVel * timeElapsed
 	}
-
 }

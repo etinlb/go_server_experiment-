@@ -107,7 +107,7 @@ func main() {
 	log.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", *port)
-	moveChannel, addChannel := GameLoop()
+	moveChannel, addChannel := StartGameLoop()
 
 	// Add channels to the channel coordinator
 	channelCoordinator = ComunicationChannels{moveChannel: moveChannel, addChannel: addChannel}
