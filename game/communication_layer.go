@@ -8,16 +8,16 @@ import (
 
 // Various channel structs that are used for communicating with the game and physics loop
 type MoveRequest struct {
-	Xvel     int
-	Yvel     int
-	PlayerId string
+	Xvel float64
+	Yvel float64
+	Id   string
 }
 
 // Adds an object with the id the game object map
 type AddRequest struct {
-	X        int
-	Y        int
-	PlayerId string
+	X  float64
+	Y  float64
+	Id string
 }
 
 // Global struct I think?
@@ -52,4 +52,20 @@ func ReadMoveEvent(data json.RawMessage) *MoveRequest {
 	json.Unmarshal(data, &dataMessage)
 
 	return dataMessage
+}
+
+func broadCastGameObjects() {
+	updateData := make([]UpdateMessage, 0)
+	for _, gameObj := range gameObjects {
+		jsonData := gameObj.BuildUpdateMessage()
+		updateData = append(updateData, jsonData)
+	}
+
+	updateEvent := UpdateEvent{"update", updateData}
+
+	updateBytes, _ := json.Marshal(updateEvent)
+
+	fmt.Printf("Broadcasting %s\n", string(updateBytes))
+
+	clientBackend.BroadCastPackets(updateBytes, nil)
 }

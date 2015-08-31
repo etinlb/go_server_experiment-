@@ -10,10 +10,10 @@ import (
 // TODO: TODO: Make it return channel of channels
 func StartGameLoop() (chan *MoveRequest, chan *AddRequest) {
 	// about 16 milliseconds for 60 fps a second
-	gameTick := time.NewTicker(time.Millisecond * 1000)
+	gameTick := time.NewTicker(time.Millisecond * 10)
 
 	// Physics runs at 50 fps
-	physicsTick := time.NewTicker(time.Millisecond * 2)
+	physicsTick := time.NewTicker(time.Millisecond * 20)
 	timeStep := (time.Millisecond * 2).Seconds()
 
 	moveChannel := make(chan *MoveRequest)
@@ -31,9 +31,13 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest) {
 			select {
 			case msg := <-addChannel:
 				fmt.Printf("Added!!!!!! %+v\n", msg)
+				player := NewPlayer(msg.X, msg.Y, msg.Id)
+				AddPlayerObjectToWorld(player)
 			default:
 				// Move on to other things
 			}
+			// TODO: Have this done with a channel I think...
+			broadCastGameObjects()
 		}
 	}()
 
@@ -45,13 +49,30 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest) {
 	return moveChannel, addChannel
 }
 
+func AddPhysicsComp(comp *PhysicsComponent, id string) {
+	physicsComponents[id] = comp
+}
+
+func AddPlayerObjectToWorld(player Player) {
+	playerObjects[player.Id] = &player
+	gameObjects[player.Id] = &player
+	AddPhysicsComp(player.PhysicsComp, player.Id)
+}
+
 // Physics loops listens from move requests and
 func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveRequest, timeStep float64) {
 	frameSimulated := 0
 	for range physicsTick.C {
 		// Read any movement updates
 		select {
+		// Right now, a move request only comes in through player movement
 		case msg := <-moveChannel:
+			id := msg.Id
+			if physicsComp, ok := physicsComponents[id]; ok {
+				//do something here
+				physicsComp.Move(msg.Xvel, msg.Yvel)
+			}
+
 			fmt.Printf("Physics doing movement%+v\n", msg)
 		default:
 			// Move on to other things

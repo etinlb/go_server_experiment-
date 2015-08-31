@@ -1,15 +1,20 @@
 package main
 
+// import (
+// 	"encoding/json"
+// 	"fmt"
+// )
+
 var gameId = 1
-var playerMovementXVel = 100.0
-var playerMovementYVel = 100.0
+var playerMovementXVel = 1000.0
+var playerMovementYVel = 1000.0
 
 // Game Object is a struct with various components, components themselves
 // aren't game objects
 type GameObject interface {
 	Update()
-	ReadMessage()    // process data it gets from the client
-	PackageMessage() // process data it gets from the client
+	ReadMessage()                      // process data it gets from the client
+	BuildUpdateMessage() UpdateMessage // process data it gets from the client
 }
 
 type RectComponent struct {
@@ -19,6 +24,17 @@ type RectComponent struct {
 
 type BaseGameObjData struct {
 	Id string `json:"id"`
+}
+
+type UpdateMessage struct {
+	X  float64 `json:"x"`
+	Y  float64 `json:"y"`
+	Id string  `json:"id"`
+}
+
+type UpdateEvent struct {
+	Event   string          `json:"event"`
+	Objects []UpdateMessage `json:"data"`
 }
 
 type PhysicsComponent struct {
@@ -34,6 +50,7 @@ type Player struct {
 	Id          string            // the identifier of the client controlling this object
 }
 
+// Right
 func (m *PhysicsComponent) Move(xAxis, yAxis float64) {
 	m.XVel += playerMovementXVel * xAxis
 	m.YVel += playerMovementYVel * yAxis
@@ -47,8 +64,11 @@ func (m *Player) ReadMessage() {
 
 }
 
-func (m *Player) PackageMessage() {
+// Packages the player Physics state into a json byte array
+func (m *Player) BuildUpdateMessage() UpdateMessage {
+	updateMessage := UpdateMessage{m.PhysicsComp.X, m.PhysicsComp.Y, m.Id}
 
+	return updateMessage
 }
 
 func (m *PhysicsComponent) AddImpulse(xForce, yForce float64) {
@@ -74,10 +94,6 @@ func NewPlayer(x, y float64, id string) Player {
 		Id:          id,
 	}
 	return playerObject
-}
-
-func AddPlayerObject() {
-
 }
 
 func NewRectComponent(x, y float64) RectComponent {

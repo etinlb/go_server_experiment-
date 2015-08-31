@@ -27,7 +27,7 @@ function Game() {
   // TODO: Need to make a sync command from the server so it can send all the
   // game objects that were previously created.
   this.connection.bind( "createPlayer", this.createGameObj, this );
-  this.connection.bind( "update", this.updateRemoteObject, this )
+  this.connection.bind( "update", this.updateRemoteObjects, this )
   this.connection.bind( "sync", this.sync, this )
 };
 
@@ -39,7 +39,7 @@ Game.prototype = {
     this.gameLoop = _.bind( this.gameLoop, this );
     this.connectAndStart = _.bind( this.connectAndStart, this );
     this.createGameObj = _.bind( this.createGameObj, this );
-    this.updateRemoteObject = _.bind( this.updateRemoteObject, this );
+    this.updateRemoteObjects = _.bind( this.updateRemoteObjects, this );
     this.addGameObject = _.bind( this.addGameObject, this );
     // this.handleKeyDown = _.bind( this.handleKeyDown, this );
     // this.handleKeyUp = _.bind( this.handleKeyUp, this );
@@ -75,9 +75,12 @@ Game.prototype = {
    * @param  {[type]} evt [description]
    * @return {[type]}     [description]
    */
-  updateRemoteObject: function( evt )
+  updateRemoteObjects: function( evt )
   {
-    this.unitManager.units[evt.id].updatePositionFromPacket(evt);
+    for (var i = evt.length - 1; i >= 0; i--) {
+      var id = evt[i].id;
+      this.unitManager.units[id].updatePositionFromPacket(evt[i]);
+    };
 
     if(debug){
       this.debugNetwork();
