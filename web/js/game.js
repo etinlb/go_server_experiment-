@@ -100,11 +100,12 @@ Game.prototype = {
 
   },
 
+  // TODO: Switch based on the type field of the game object
   createGameObj: function( gameObject )
   {
     var object = new Unit();
-    object.x = gameObject.Rect.x;
-    object.y = gameObject.Rect.y;
+    // object.x = gameObject.Rect.x;
+    // object.y = gameObject.Rect.y;
     object.id = gameObject.id;
 
     this.addGameObject( object );

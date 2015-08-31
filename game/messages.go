@@ -4,7 +4,8 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/gorilla/websocket"
+	"fmt"
+    "github.com/gorilla/websocket"
 )
 
 type Message struct {
@@ -23,9 +24,14 @@ type ClientMessage struct {
 	Data json.RawMessage
 }
 
-type SyncMessage struct {
+type SyncEvent struct {
 	Event   string       `json:"event"` // client works with lowercase
-	Objects []GameObject `json:"data"`
+	Objects []SyncMessage `json:"data"`
+}
+
+type SyncMessage struct {
+    ObjType string `json:"type"`
+    Id      string `json:"id"`
 }
 
 // messages to send back to client...Can't be raw json?
@@ -39,19 +45,15 @@ type ObjectMessage struct {
 // client connected
 func SyncClient(client *websocket.Conn) {
 	// TODO: Assess whether or not this is going to be to slow
-	syncData := make([]GameObject, 0)
+	syncData := make([]SyncMessage, 0)
+    fmt.Println("syncing data")
 
-	for conn, connData := range clients {
-		if conn == client {
-			continue
-		}
+    for _, obj := range gameObjects {
+        syncData = append(syncData, obj.BuildSyncMessage())
+    }
+    fmt.Printf("%+v", syncData)
 
-		for _, obj := range connData.GameObjects {
-			syncData = append(syncData, obj)
-		}
-	}
-
-	syncMessage := SyncMessage{Event: "sync", Objects: syncData}
+	syncMessage := SyncEvent{Event: "sync", Objects: syncData}
 	syncMessageAsJson, _ := json.Marshal(syncMessage)
 
 	clientBackend.SendToClient(syncMessageAsJson, client)

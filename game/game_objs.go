@@ -13,7 +13,8 @@ var playerMovementYVel = 1000.0
 // aren't game objects
 type GameObject interface {
 	Update()
-	ReadMessage()                      // process data it gets from the client
+	ReadMessage() // process data it gets from the client
+	BuildSyncMessage() SyncMessage
 	BuildUpdateMessage() UpdateMessage // process data it gets from the client
 }
 
@@ -54,6 +55,11 @@ type Player struct {
 func (m *PhysicsComponent) Move(xAxis, yAxis float64) {
 	m.XVel += playerMovementXVel * xAxis
 	m.YVel += playerMovementYVel * yAxis
+}
+
+func (m *Player) BuildSyncMessage() SyncMessage {
+	message := SyncMessage{"player", m.Id}
+	return message
 }
 
 func (m *Player) Update() {

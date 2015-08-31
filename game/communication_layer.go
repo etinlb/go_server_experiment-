@@ -65,7 +65,7 @@ func broadCastGameObjects() {
 
 	updateBytes, _ := json.Marshal(updateEvent)
 
-	fmt.Printf("Broadcasting %s\n", string(updateBytes))
+	// fmt.Printf("Broadcasting %s\n", string(updateBytes))
 
 	clientBackend.BroadCastPackets(updateBytes, nil)
 }
