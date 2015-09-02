@@ -51,7 +51,6 @@ type Player struct {
 	Id          string            // the identifier of the client controlling this object
 }
 
-// Right
 func (m *PhysicsComponent) Move(xAxis, yAxis float64) {
 	m.XVel += playerMovementXVel * xAxis
 	m.YVel += playerMovementYVel * yAxis

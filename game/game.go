@@ -107,10 +107,13 @@ func main() {
 	log.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", *port)
-	moveChannel, addChannel := StartGameLoop()
+	moveChannel, addChannel, broadcastAddChannel := StartGameLoop()
 
 	// Add channels to the channel coordinator
-	channelCoordinator = ComunicationChannels{moveChannel: moveChannel, addChannel: addChannel}
+	channelCoordinator = ComunicationChannels{
+		moveChannel:         moveChannel,
+		addChannel:          addChannel,
+		broadcastAddChannel: broadcastAddChannel}
 
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)

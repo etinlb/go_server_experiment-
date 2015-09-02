@@ -25,13 +25,13 @@ type ClientMessage struct {
 }
 
 type SyncEvent struct {
-	Event   string       `json:"event"` // client works with lowercase
+	Event   string        `json:"event"` // client works with lowercase
 	Objects []SyncMessage `json:"data"`
 }
 
 type SyncMessage struct {
-    ObjType string `json:"type"`
-    Id      string `json:"id"`
+	ObjType string `json:"type"`
+	Id      string `json:"id"`
 }
 
 // messages to send back to client...Can't be raw json?
@@ -49,9 +49,9 @@ func SyncClient(client *websocket.Conn) {
 	log.Printf("Syncing data with socket: RemoteAddress %v, LocalAddress %v",
 		client.RemoteAddr(), client.LocalAddr())
 
-    for _, obj := range gameObjects {
-        syncData = append(syncData, obj.BuildSyncMessage())
-    }
+	for _, obj := range gameObjects {
+		syncData = append(syncData, obj.BuildSyncMessage())
+	}
 	log.Printf("Syncing with %+v\n", syncData)
 
 	syncMessage := SyncEvent{Event: "sync", Objects: syncData}

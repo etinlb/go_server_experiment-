@@ -13,8 +13,10 @@ type MoveRequest struct {
 	Id   string
 }
 
-// Adds an object with the id the game object map
+// Adds an object with the id the game object map. Same as update message, just
+// named more clearly
 type AddRequest struct {
+	// UpdateMessage
 	X  float64
 	Y  float64
 	Id string
@@ -22,8 +24,9 @@ type AddRequest struct {
 
 // Global struct I think?
 type ComunicationChannels struct {
-	moveChannel chan *MoveRequest
-	addChannel  chan *AddRequest
+	moveChannel         chan *MoveRequest // client move request
+	addChannel          chan *AddRequest  // client add request
+	broadcastAddChannel chan *AddRequest  // add request that gets broadcasts to the other clients
 }
 
 // Takes the event bytes from handle client event and processes them
@@ -60,9 +63,13 @@ func broadCastGameObjects() {
 		updateData = append(updateData, jsonData)
 	}
 
+	// TODO: Have muliple events being sent back to the client
 	updateEvent := UpdateEvent{"update", updateData}
 
 	updateBytes, _ := json.Marshal(updateEvent)
 
 	clientBackend.BroadCastPackets(updateBytes, nil)
+
+	// Broadcast any added game object
+
 }
