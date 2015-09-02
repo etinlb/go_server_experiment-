@@ -3,7 +3,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 )
 
 // Various channel structs that are used for communicating with the game and physics loop
@@ -28,8 +28,7 @@ type ComunicationChannels struct {
 
 // Takes the event bytes from handle client event and processes them
 func (c *ComunicationChannels) ProcessEvents(event string, data []byte) {
-	fmt.Printf("%s, event with this data %s", event, string(data))
-	fmt.Printf("%+v, writing to this channel ", c.addChannel)
+	log.Printf("%s event with this data: %s\n", event, string(data))
 
 	if event == "createPlayer" {
 		addReq := ReadCreatePlayerEvent(data)
@@ -64,8 +63,6 @@ func broadCastGameObjects() {
 	updateEvent := UpdateEvent{"update", updateData}
 
 	updateBytes, _ := json.Marshal(updateEvent)
-
-	// fmt.Printf("Broadcasting %s\n", string(updateBytes))
 
 	clientBackend.BroadCastPackets(updateBytes, nil)
 }

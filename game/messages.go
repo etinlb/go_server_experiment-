@@ -4,8 +4,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-    "github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
+	"log"
 )
 
 type Message struct {
@@ -46,12 +46,13 @@ type ObjectMessage struct {
 func SyncClient(client *websocket.Conn) {
 	// TODO: Assess whether or not this is going to be to slow
 	syncData := make([]SyncMessage, 0)
-    fmt.Println("syncing data")
+	log.Printf("Syncing data with socket: RemoteAddress %v, LocalAddress %v",
+		client.RemoteAddr(), client.LocalAddr())
 
     for _, obj := range gameObjects {
         syncData = append(syncData, obj.BuildSyncMessage())
     }
-    fmt.Printf("%+v", syncData)
+	log.Printf("Syncing with %+v\n", syncData)
 
 	syncMessage := SyncEvent{Event: "sync", Objects: syncData}
 	syncMessageAsJson, _ := json.Marshal(syncMessage)

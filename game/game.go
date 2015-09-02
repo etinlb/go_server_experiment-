@@ -111,11 +111,10 @@ func main() {
 
 	// Add channels to the channel coordinator
 	channelCoordinator = ComunicationChannels{moveChannel: moveChannel, addChannel: addChannel}
-	// fmt.Println(channelCoordinator)
 
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)
-	fmt.Println(err.Error())
+	log.Println(err.Error())
 }
 
 // register with the master server and get a list of neighbors to start connections with
@@ -139,11 +138,11 @@ func jackIn(port int) NeighborServerList {
 	err = decoder.Decode(&neighbors)
 
 	if err != nil {
-		fmt.Print("%v\n", err)
+		log.Printf("%v\n", err)
 		panic(err)
 	}
 
-	fmt.Printf("%+v\n", neighbors)
+	log.Printf("%+v\n", neighbors)
 
 	return neighbors
 }

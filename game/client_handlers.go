@@ -3,16 +3,14 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
+	// "log"
 )
 
 // Client events is data sent from the client to the server
 func HandleClientEvent(event []byte, client *websocket.Conn) {
 	var message Message
 	json.Unmarshal(event, &message)
-
-	fmt.Println("Handling client data")
 
 	channelCoordinator.ProcessEvents(message.Event, message.Data)
 }

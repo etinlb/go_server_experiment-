@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"time"
 )
 
@@ -30,7 +30,6 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest) {
 			// channels outside of the game loop.
 			select {
 			case msg := <-addChannel:
-				fmt.Printf("Added!!!!!! %+v\n", msg)
 				player := NewPlayer(msg.X, msg.Y, msg.Id)
 				AddPlayerObjectToWorld(player)
 			default:
@@ -44,7 +43,7 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest) {
 	// Start phyics loop, give it the movement channel and it's ticker
 	go PhysicsLoop(physicsTick, moveChannel, timeStep)
 
-	fmt.Println("Started Game Loop Go Routine atlkj ")
+	log.Println("Started Game Loop")
 
 	return moveChannel, addChannel
 }
@@ -72,8 +71,6 @@ func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveRequest, timeSt
 				//do something here
 				physicsComp.Move(msg.Xvel, msg.Yvel)
 			}
-
-			fmt.Printf("Physics doing movement%+v\n", msg)
 		default:
 			// Move on to other things
 		}
