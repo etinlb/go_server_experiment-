@@ -4,7 +4,6 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	// "log"
 )
 
 // Client events is data sent from the client to the server

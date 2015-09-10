@@ -3,7 +3,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 )
 
 // Various channel structs that are used for communicating with the game and physics loop
@@ -31,7 +30,7 @@ type ComunicationChannels struct {
 
 // Takes the event bytes from handle client event and processes them
 func (c *ComunicationChannels) ProcessEvents(event string, data []byte) {
-	log.Printf("%s event with this data: %s\n", event, string(data))
+	Trace.Printf("Received %s event with this data: %s\n", event, string(data))
 
 	if event == "createPlayer" {
 		addReq := ReadCreatePlayerEvent(data)

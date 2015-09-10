@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	// "io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/etinlb/go_game/backend"
@@ -44,8 +45,9 @@ type NeighborServerList struct {
 }
 
 func cleanUpSocket(conn *websocket.Conn) {
+	Info.Println("Cleaning up connection from %s", conn.RemoteAddr())
 	for id, _ := range clients[conn].GameObjects {
-		log.Println("deleting from gameObjects map")
+		Trace.Println("deleting from gameObjects map, id: %s", id)
 		delete(gameObjects, id)
 	}
 
@@ -63,6 +65,16 @@ func initializeGameData() {
 	physicsComponents = make(map[string]*PhysicsComponent)
 }
 
+func initializeLogger() {
+	// TODO: Read a config file
+	InitLogger(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
+	// InitLogger(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
+	// Trace.Println("I have something standard to say")
+	// Info.Println("Special Information")
+	// Warning.Println("There is something you need to know about")
+	// Error.Println("Something has failed")
+}
+
 // TODO: SHould this be in server vars?
 func initializeConnectionData() {
 	clients = make(map[*websocket.Conn]ClientData)
@@ -70,6 +82,8 @@ func initializeConnectionData() {
 }
 
 func main() {
+	initializeLogger()
+
 	port := flag.Int("port", 8080, "port to serve on")
 	// TODO: have this address passed from the other server
 	dir := flag.String("directory", "../web/", "directory of web files")
@@ -104,7 +118,7 @@ func main() {
 	// the socket to read incoming connections from the master server
 	http.HandleFunc("/masterSocket", serverBackend.WsHandler)
 
-	log.Printf("Running on port %d\n", *port)
+	Info.Printf("Running on port %d\n", *port)
 
 	addr := fmt.Sprintf("0.0.0.0:%d", *port)
 	moveChannel, addChannel, broadcastAddChannel := StartGameLoop()
@@ -117,13 +131,13 @@ func main() {
 
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)
-	log.Println(err.Error())
+	Warning.Println(err.Error())
 }
 
 // register with the master server and get a list of neighbors to start connections with
 func jackIn(port int) NeighborServerList {
 	jsonStr := "{\"port\":" + strconv.Itoa(port) + "}"
-	log.Println(jsonStr)
+	Trace.Println("Jacking in with " + jsonStr)
 	var jsonByte = []byte(jsonStr)
 
 	req, err := http.NewRequest("POST", masterUrl, bytes.NewBuffer(jsonByte))
@@ -132,6 +146,7 @@ func jackIn(port int) NeighborServerList {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		Error.Printf("%v\n", err)
 		panic(err)
 	}
 	defer resp.Body.Close()
@@ -141,11 +156,11 @@ func jackIn(port int) NeighborServerList {
 	err = decoder.Decode(&neighbors)
 
 	if err != nil {
-		log.Printf("%v\n", err)
+		Error.Printf("%v\n", err)
 		panic(err)
 	}
 
-	log.Printf("%+v\n", neighbors)
+	Trace.Printf("Neighbor servers are: %+v\n", neighbors)
 
 	return neighbors
 }
@@ -159,6 +174,6 @@ func setUpNeighborConnections(neighbors NeighborServerList) {
 
 func printGameObjectMap() {
 	for _, obj := range gameObjects {
-		log.Println(obj)
+		Info.Println(obj)
 	}
 }

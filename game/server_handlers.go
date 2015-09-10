@@ -3,8 +3,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -23,14 +21,12 @@ type ServerConnection struct {
 }
 
 func HandleServerEvent(event []byte, client *websocket.Conn) {
-	// TODO: Fix this so it's not just the general interface object
 	var message Message
 	json.Unmarshal(event, &message)
 
 	if message.Event == "coordinationEvent" {
-
-		log.Println("coordination event")
-		log.Println(message.Data)
+		Trace.Println("coordination event")
+		Trace.Println(message.Data)
 	}
 }
 
@@ -51,14 +47,16 @@ func initializeServerVars() {
 func newClientConnection(connectionUrl string) (conn *websocket.Conn) {
 	u, err := url.Parse(connectionUrl)
 	if err != nil {
-		log.Println(err)
+		Error.Println(err)
 	}
-	log.Println(u)
 
-	log.Println(u.Host)
+	Trace.Printf("url for new client connection is %+v\n", u)
+
+	Info.Println("Attempting to dial " + u.Host)
+
 	rawConn, err := net.Dial("tcp", u.Host)
 	if err != nil {
-		log.Println(err)
+		Error.Printf("Failed to dial %s. Error: %+v\n", err)
 		return nil
 	}
 
@@ -71,7 +69,10 @@ func newClientConnection(connectionUrl string) (conn *websocket.Conn) {
 	wsConn, resp, err := websocket.NewClient(rawConn, u, wsHeaders, 1024, 1024)
 
 	if err != nil {
-		fmt.Errorf("websocket.NewClient Error: %s\nResp:%+v", err, resp)
+		Error.Printf("websocket.NewClient Error: %s\nResp:%+v", err, resp)
 	}
+
+	Info.Printf("Successfully connected to %+v", wsConn.RemoteAddr())
+
 	return wsConn
 }

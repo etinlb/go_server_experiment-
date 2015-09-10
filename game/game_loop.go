@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"time"
 )
 
@@ -35,7 +34,7 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest, chan *AddRequest) {
 				// Arbitraily read up to ten add requests in a single frame
 				select {
 				case msg := <-addChannel:
-					log.Printf("Adding with  %+v\n", msg)
+					Trace.Printf("Adding with  %+v\n", msg)
 					player := NewPlayer(msg.X, msg.Y, msg.Id)
 					AddPlayerObjectToWorld(player)
 					// TODO: Have proper error checking and only add to broadcast channel if
@@ -53,7 +52,7 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest, chan *AddRequest) {
 	// Start phyics loop, give it the movement channel and it's ticker
 	go PhysicsLoop(physicsTick, moveChannel, timeStep)
 
-	log.Println("Started Game Loop")
+	Info.Println("Started Game Loop")
 
 	return moveChannel, addChannel, broadcastAddChannel
 }
