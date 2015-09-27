@@ -27,6 +27,7 @@ function Game() {
   // TODO: Need to make a sync command from the server so it can send all the
   // game objects that were previously created.
   this.connection.bind( "createPlayer", this.createGameObj, this );
+  this.connection.bind( "createObject", this.createGameObj, this );
   this.connection.bind( "update", this.updateRemoteObjects, this )
   this.connection.bind( "sync", this.sync, this )
 };
@@ -167,6 +168,7 @@ Game.prototype = {
     if (this.connection.state() != WebSocket.OPEN){
       setTimeout( this.connectAndStart, 100);
     } else {
+      // TODO: Properly pool the messages to send only once
       // send the queued messages
       for (var i = connectionQueue.length - 1; i >= 0; i--) {
         this.connection.send( connectionQueue[i]["event"], connectionQueue[i]["packet"] );

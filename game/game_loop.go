@@ -37,6 +37,7 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest, chan *AddRequest) {
 					Trace.Printf("Adding with  %+v\n", msg)
 					player := NewPlayer(msg.X, msg.Y, msg.Id)
 					AddPlayerObjectToWorld(player)
+					AddObjectToConnectionData(&player, player.Id, msg.sourceId)
 					// TODO: Have proper error checking and only add to broadcast channel if
 					// successful
 					broadcastAddChannel <- msg
@@ -59,6 +60,10 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest, chan *AddRequest) {
 
 func AddPhysicsComp(comp *PhysicsComponent, id string) {
 	physicsComponents[id] = comp
+}
+
+func AddObjectToConnectionObject(objId string, obj GameObject, client ClientData) {
+	client.GameObjects[objId] = obj
 }
 
 func AddPlayerObjectToWorld(player Player) {
