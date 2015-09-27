@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "flag"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -25,10 +24,12 @@ var physicsComponents map[string]*PhysicsComponent
 // Communication coordinator
 var channelCoordinator ComunicationChannels
 
-var connections map[*websocket.Conn]bool
+// Connection structures
+var connections map[*websocket.Conn]int // Maps the connection object to the client id
+var clientIdMap map[int]*ClientData
 
 // map that keeps track of what data came from what client
-var clients map[*websocket.Conn]ClientData
+// var clients map[*websocket.Conn]*ClientData
 
 var clientBackend backend.BackendController
 var serverBackend backend.BackendController
@@ -46,13 +47,21 @@ type NeighborServerList struct {
 
 func cleanUpSocket(conn *websocket.Conn) {
 	Info.Println("Cleaning up connection from %s", conn.RemoteAddr())
-	for id, _ := range clients[conn].GameObjects {
+	Info.Println(len(gameObjects))
+	clientId := connections[conn]
+	clientData := clientIdMap[clientId]
+	for id, _ := range clientData.GameObjects {
 		Trace.Println("deleting from gameObjects map, id: %s", id)
+		// TODO: Need to delete all references to this object...Idk how to best
+		// do that.
 		delete(gameObjects, id)
+		delete(playerObjects, id)
+		delete(physicsComponents, id)
 	}
 
-	delete(clients, conn)
+	delete(clientIdMap, clientData.ClientId)
 	delete(connections, conn)
+	Info.Println(len(gameObjects))
 
 	conn.Close()
 	printGameObjectMap()
@@ -77,8 +86,10 @@ func initializeLogger() {
 
 // TODO: SHould this be in server vars?
 func initializeConnectionData() {
-	clients = make(map[*websocket.Conn]ClientData)
-	connections = make(map[*websocket.Conn]bool)
+	// TODO: Access if we need the clients variable
+	// clients = make(map[*websocket.Conn]*ClientData)
+	connections = make(map[*websocket.Conn]int)
+	clientIdMap = make(map[int]*ClientData)
 }
 
 func main() {
@@ -87,6 +98,7 @@ func main() {
 	port := flag.Int("port", 8080, "port to serve on")
 	// TODO: have this address passed from the other server
 	dir := flag.String("directory", "../web/", "directory of web files")
+	interactive := flag.Bool("i", false, "Run with an interactive shell")
 	flag.Parse()
 
 	// =========Game Initializations============
@@ -129,6 +141,16 @@ func main() {
 		addChannel:          addChannel,
 		broadcastAddChannel: broadcastAddChannel}
 
+	if *interactive {
+		go runHttpServer(addr)
+		runInteractiveMode(channelCoordinator)
+	} else {
+		// function runs until an exit is called
+		runHttpServer(addr)
+	}
+}
+
+func runHttpServer(addr string) {
 	// this call blocks -- the progam runs here forever
 	err := http.ListenAndServe(addr, nil)
 	Warning.Println(err.Error())
