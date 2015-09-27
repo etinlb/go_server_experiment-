@@ -44,6 +44,9 @@ type PhysicsComponent struct {
 	YVel   float64 `json:"yVel"`
 	XForce float64
 	YForce float64
+	Location Vector2D `json:"location"`
+	Velocity Vector2D `json:"velocity"`
+	Force    Vector2D
 }
 
 type Player struct {
@@ -54,10 +57,13 @@ type Player struct {
 func (m *PhysicsComponent) Move(xAxis, yAxis float64) {
 	m.XVel += playerMovementXVel * xAxis
 	m.YVel += playerMovementYVel * yAxis
+	m.Velocity.X += playerMovementXVel * xAxis
+	m.Velocity.Y += playerMovementYVel * yAxis
 }
 
 func (m *Player) BuildSyncMessage() SyncMessage {
 	message := SyncMessage{"player", m.Id}
+	message := SyncMessage{"player", m.Id, m.PhysicsComp.Location.X, m.PhysicsComp.Location.Y}
 	return message
 }
 

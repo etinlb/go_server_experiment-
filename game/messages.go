@@ -16,6 +16,7 @@ type Message struct {
 type ClientData struct {
 	Client      *websocket.Conn
 	GameObjects map[string]GameObject
+	ClientId    int
 }
 
 type ClientMessage struct {
@@ -29,9 +30,16 @@ type SyncEvent struct {
 }
 
 type SyncMessage struct {
-	ObjType string `json:"type"`
-	Id      string `json:"id"`
+	ObjType string  `json:"type"`
+	Id      string  `json:"id"`
+	X       float64 `json:"x"`
+	Y       float64 `json:"y"`
 }
+
+// type AddMessage struct {
+// 	Event string `string:"event"`
+// 	ObjToAdd []AddRequest `json:
+// }
 
 // messages to send back to client...Can't be raw json?
 // TODO: Figure out the struct stuff in go.
