@@ -95,7 +95,7 @@ func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveRequest, timeSt
 func TickPhysics(timeElapsed float64) {
 	for _, gameObj := range physicsComponents {
 		// Basic movement for now
-		gameObj.X += gameObj.XVel * timeElapsed
-		gameObj.Y += gameObj.YVel * timeElapsed
+		gameObj.Location.X += gameObj.Velocity.X * timeElapsed
+		gameObj.Location.Y += gameObj.Velocity.Y * timeElapsed
 	}
 }

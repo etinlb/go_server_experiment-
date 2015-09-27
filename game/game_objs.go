@@ -23,8 +23,12 @@ type RectComponent struct {
 	Y float64 `json:"y"`
 }
 
+// Component for the bare minimum representation of a game object
+// :id     - unique object id
+// :source - source id of the client or server the object belongs to
 type BaseGameObjData struct {
-	Id string `json:"id"`
+	Id       string `json:"id"`
+	sourceId int    `json:"sourceId"`
 }
 
 type UpdateMessage struct {
@@ -39,11 +43,6 @@ type UpdateEvent struct {
 }
 
 type PhysicsComponent struct {
-	RectComponent
-	XVel   float64 `json:"xVel"`
-	YVel   float64 `json:"yVel"`
-	XForce float64
-	YForce float64
 	Location Vector2D `json:"location"`
 	Velocity Vector2D `json:"velocity"`
 	Force    Vector2D
@@ -55,14 +54,11 @@ type Player struct {
 }
 
 func (m *PhysicsComponent) Move(xAxis, yAxis float64) {
-	m.XVel += playerMovementXVel * xAxis
-	m.YVel += playerMovementYVel * yAxis
 	m.Velocity.X += playerMovementXVel * xAxis
 	m.Velocity.Y += playerMovementYVel * yAxis
 }
 
 func (m *Player) BuildSyncMessage() SyncMessage {
-	message := SyncMessage{"player", m.Id}
 	message := SyncMessage{"player", m.Id, m.PhysicsComp.Location.X, m.PhysicsComp.Location.Y}
 	return message
 }
@@ -77,23 +73,19 @@ func (m *Player) ReadMessage() {
 
 // Packages the player Physics state into a json byte array
 func (m *Player) BuildUpdateMessage() UpdateMessage {
-	updateMessage := UpdateMessage{m.PhysicsComp.X, m.PhysicsComp.Y, m.Id}
+	updateMessage := UpdateMessage{m.PhysicsComp.Location.X, m.PhysicsComp.Location.Y, m.Id}
 
 	return updateMessage
 }
 
-func (m *PhysicsComponent) AddImpulse(xForce, yForce float64) {
-	m.XForce += xForce
-	m.YForce += yForce
-}
+// func (m *PhysicsComponent) AddImpulse(xForce, yForce float64) {
+// 	m.XForce += xForce
+// 	m.YForce += yForce
+// }
 
 func NewPhysicsComponent(x, y float64) PhysicsComponent {
-	rect := NewRectComponent(x, y)
-	gameObject := PhysicsComponent{
-		RectComponent: rect,
-		XVel:          0,
-		YVel:          0,
-	}
+	locationVector := NewVector(x, y)
+	gameObject := PhysicsComponent{Location: locationVector}
 
 	return gameObject
 }
@@ -105,10 +97,4 @@ func NewPlayer(x, y float64, id string) Player {
 		Id:          id,
 	}
 	return playerObject
-}
-
-func NewRectComponent(x, y float64) RectComponent {
-	rect := RectComponent{X: x, Y: y}
-
-	return rect
 }
