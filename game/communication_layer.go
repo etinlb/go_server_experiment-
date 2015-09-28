@@ -65,6 +65,15 @@ func ReadMoveEvent(data json.RawMessage) *MoveRequest {
 }
 
 func broadCastGameObjects() {
+	// run the sync event first to ensure objects are created by the client first
+	// TODO: This should be batched with with the update message
+	syncEvent := readBroadCastEvents(channelCoordinator.broadcastAddChannel)
+	if syncEvent.Objects != nil {
+		syncBytes, _ := json.Marshal(syncEvent)
+		Trace.Printf("Broadcasting some shit %s", string(syncBytes))
+		clientBackend.BroadCastPackets(syncBytes, nil)
+	}
+
 	updateData := make([]UpdateMessage, 0)
 	for _, gameObj := range gameObjects {
 		jsonData := gameObj.BuildUpdateMessage()
@@ -78,19 +87,10 @@ func broadCastGameObjects() {
 
 	// Broadcast any added game object
 	clientBackend.BroadCastPackets(updateBytes, nil)
-
-	// TODO: This should be batched with with the update message
-	syncEvent := readBroadCastEvents(channelCoordinator.broadcastAddChannel)
-	if syncEvent.Objects != nil {
-		syncBytes, _ := json.Marshal(syncEvent)
-		Trace.Printf("Broadcasting some shit %s", string(syncBytes))
-		clientBackend.BroadCastPackets(syncBytes, nil)
-	}
-
 }
 
 func readBroadCastEvents(broadCastAddChannel chan *AddRequest) SyncEvent {
-	syncEvent := SyncEvent{Event: "createObject"}
+	syncEvent := SyncEvent{Event: "sync"}
 	for i := 0; i < 10; i++ {
 		// Arbitraily read up to ten add requests in a single frame
 		select {
