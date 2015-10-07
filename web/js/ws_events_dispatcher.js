@@ -60,7 +60,23 @@ var FancyWebSocket = function(url){
   // dispatch to the right handlers
   conn.onmessage = function(evt){
     var json = JSON.parse(evt.data)
-    dispatch(json.event, json.data)
+    // check if multiple events were sent in this message
+    // TODO: Figure out a better convention other than, "Is this event or events?"
+    // But avoid type checking....
+    //
+    // TODO: Also, figure out if we want to enforce ordering? Should we be able
+    // to read the events in any order, pick certian ones base on the type of
+    // event or just read the array in order and trust they are sent properly
+    if( json.events !== undefined )
+    {
+      for (var i = 0; i < json.events.length; i++) {
+        eventName = json.events[i].event;
+        eventData = json.events[i].data;
+        dispatch(eventName, eventData)
+      };
+    } else {
+      dispatch(json.event, json.data)
+    }
   };
 
   this.state = function() {

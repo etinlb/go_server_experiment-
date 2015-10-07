@@ -8,8 +8,12 @@ import (
 )
 
 type Message struct {
-	Event string
-	Data  json.RawMessage // how data is parsed depends on the event
+	Event string          `json:"event"`
+	Data  json.RawMessage `json:"data"` // how data is parsed depends on the event
+}
+
+type Events struct {
+	Events []Message `json:"events"`
 }
 
 // keeps track of data from a client
@@ -35,11 +39,6 @@ type SyncMessage struct {
 	X       float64 `json:"x"`
 	Y       float64 `json:"y"`
 }
-
-// type AddMessage struct {
-// 	Event string `string:"event"`
-// 	ObjToAdd []AddRequest `json:
-// }
 
 // messages to send back to client...Can't be raw json?
 // TODO: Figure out the struct stuff in go.
