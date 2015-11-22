@@ -134,6 +134,14 @@ func main() {
 		"store the connected servers")
 	flag.Parse()
 
+	serverFile = *list_file
+
+	if _, err := os.Stat(serverFile); os.IsNotExist(err) {
+		fmt.Printf("no server file %s, creating it instead.", serverFile)
+		empty_file := ClientServerList{}
+		writeServerList(empty_file)
+	}
+
 	_, e := ioutil.ReadFile(*list_file)
 
 	// make sure we can read the file
@@ -141,8 +149,6 @@ func main() {
 		fmt.Printf("File error: %v\n", e)
 		os.Exit(1)
 	}
-
-	serverFile = *list_file
 
 	http.HandleFunc("/jackIn", handler)
 
