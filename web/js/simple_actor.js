@@ -103,7 +103,6 @@ Unit.prototype =
 
   updatePositionFromPacket: function(packet)
   {
-    console.log("getting posistion from packet");
     this.x = packet.x;
     this.y = packet.y;
   }

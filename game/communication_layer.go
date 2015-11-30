@@ -5,31 +5,49 @@ import (
 	"encoding/json"
 )
 
-// Various channel structs that are used for communicating with the game and physics loop
-type MoveRequest struct {
-	Xvel float64
-	Yvel float64
+// Base Data needed for update, adds and move requests.
+// Meant to be embedded in the various requests
+type BaseRectMessage struct {
+	X float64
+	Y float64
 	BaseGameObjData
+}
+
+func buildBaseRectData(x, y float64, id string) BaseRectMessage {
+	objectRect := BaseRectMessage{X: x, Y: y, BaseGameObjData: BaseGameObjData{Id: id}}
+	return objectRect
+}
+
+// Various channel structs that are used for communicating with the game and physics loop
+type MoveMessage struct {
+	BaseRectMessage
 }
 
 // Adds an object with the id the game object map. Same as update message, just
 // named more clearly
-type AddRequest struct {
-	// UpdateMessage
-	X float64
-	Y float64
-	BaseGameObjData
+type AddMessage struct {
+	BaseRectMessage
+	ObjType string `json: "type"`
+}
+
+func buildAddMessage(base BaseRectMessage, objType string) AddMessage {
+	return AddMessage{BaseRectMessage: base, ObjType: objType}
+}
+
+type UpdateMessage struct {
+	BaseRectMessage
 }
 
 // Global struct I think?
 // moveChannel         - client move request
 // addChannel          - client add request
 // broadcastAddChannel - add request that gets broadcasts to the other clients
-// serverAddChannel    - Channel used to communicate to the data structure keeping track of which objects belong to which source
+// serverAddChannel    - Channel used to communicate to the data structure keeping track of which
+// 						 objects belong to which source
 type ComunicationChannels struct {
-	moveChannel         chan *MoveRequest
-	addChannel          chan *AddRequest
-	broadcastAddChannel chan *AddRequest
+	moveChannel         chan *MoveMessage
+	addChannel          chan *AddMessage
+	broadcastAddChannel chan *AddMessage
 	serverAddChannel    chan *BaseGameObjData
 }
 
@@ -39,7 +57,6 @@ func (c *ComunicationChannels) ProcessEvents(event string, data []byte, eventSou
 
 	if event == "createPlayer" {
 		addReq := ReadCreatePlayerEvent(data)
-		// TODO: Add the channel id to the
 		addReq.sourceId = eventSourceId
 		c.addChannel <- addReq
 
@@ -50,27 +67,18 @@ func (c *ComunicationChannels) ProcessEvents(event string, data []byte, eventSou
 	}
 }
 
-func ReadCreatePlayerEvent(data json.RawMessage) *AddRequest {
-	var dataMessage *AddRequest
+func ReadCreatePlayerEvent(data json.RawMessage) *AddMessage {
+	var dataMessage *AddMessage
 	json.Unmarshal(data, &dataMessage)
 
 	return dataMessage
 }
 
-func ReadMoveEvent(data json.RawMessage) *MoveRequest {
-	var dataMessage *MoveRequest
+func ReadMoveEvent(data json.RawMessage) *MoveMessage {
+	var dataMessage *MoveMessage
 	json.Unmarshal(data, &dataMessage)
 
 	return dataMessage
-}
-
-type Test struct {
-	Event string
-	Data  json.RawMessage
-}
-
-type Tester struct {
-	Blah []Test
 }
 
 func broadCastGameObjects() {
@@ -81,37 +89,19 @@ func broadCastGameObjects() {
 	addMessages := readAddRequests(channelCoordinator.broadcastAddChannel)
 
 	if addMessages != nil {
-		// broadcastMessages = append(broadcastMessages, syncEvent.Objects)
 		addBytes, _ := json.Marshal(addMessages)
 		broadcastMessages = appendEventMessage("add", addBytes, broadcastMessages)
-		// Trace.Printf("Broadcasting some shit %s", string(syncBytes))
-		// clientBackend.BroadCastPackets(syncBytes, nil)
-
-		// // ==================Test=================
-		// // blahBlah := json.RawMessage(syncBytes)
-		// test := Test{Event: "test1", Data: syncBytes}
-		// test2 := Test{Event: "test2", Data: syncBytes}
-		// testSlice := make([]Test, 2)
-		// testSlice[0] = test
-		// testSlice[1] = test2
-		// tester := Tester{Blah: testSlice}
-		// testEvent, _ := json.Marshal(tester)
-		// Trace.Printf("Broadcasting some shit %s", string(testEvent))
-		// clientBackend.BroadCastPackets(testEvent, nil)
-
 	}
 
+	// if len(gameObjects) == 0 {
+
+	// }
 	updateMessage := buildUpdateEvent(gameObjects)
 	broadcastMessages = appendEventMessage("update", updateMessage, broadcastMessages)
-	// broadcastMessages = append(broadcastMessages, updateMessage)
 
-	// TODO: Have multiple events being sent back to the client
-
-	// updateBytes, _ := json.Marshal(updateEvent)
 	broadcastEventsMessages := makeEventsMessage(broadcastMessages)
 	broadcastBytes, _ := json.Marshal(broadcastEventsMessages)
-	// Broadcast any added game object
-	Trace.Println("broadcasting this data\n " + string(broadcastBytes))
+
 	clientBackend.BroadCastPackets(broadcastBytes, nil)
 }
 
@@ -129,8 +119,6 @@ func buildUpdateEvent(gameObjects map[string]GameObject) []byte {
 
 	updateBytes, _ := json.Marshal(updateData)
 
-	// updateMessage := makeSingleEventMessage("update", updateBytes)
-
 	return updateBytes
 }
 
@@ -147,22 +135,20 @@ func makeEventsMessage(events []Message) Events {
 func appendEventMessage(event string, eventData []byte, currentMessageArr []Message) []Message {
 	eventMessage := makeSingleEventMessage(event, eventData)
 	appendedSlice := append(currentMessageArr, eventMessage)
+
 	return appendedSlice
 }
 
 // Read the add request sent to the broadcast channel
-func readAddRequests(broadCastAddChannel chan *AddRequest) []SyncMessage {
-	var addMessages []SyncMessage
+func readAddRequests(broadCastAddChannel chan *AddMessage) []AddMessage {
+	var addMessages []AddMessage
 	for i := 0; i < 10; i++ {
 		// Arbitraily read up to ten add requests in a single frame
 		select {
 		case msg := <-broadCastAddChannel:
 			// TODO: add some sort of types
-			syncMessage := SyncMessage{ObjType: "blah",
-				Id: msg.Id, X: msg.X, Y: msg.Y}
-
-			addMessages = append(addMessages, syncMessage)
-			Trace.Printf("Adding with  %+v\n", syncMessage)
+			Trace.Printf("Adding with  %+v\n", msg)
+			addMessages = append(addMessages, *msg)
 		default:
 			// Move on to other things
 			break

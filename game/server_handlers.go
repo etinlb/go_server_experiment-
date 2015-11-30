@@ -40,10 +40,6 @@ func initializeServerVars() {
 	ServerConnections = make(map[*websocket.Conn]ServerConnection)
 }
 
-// log.Println(portAsString)
-// connectionUrl := "http://localhost:" + portAsString + "/masterSocket"
-// x := newClientConnection(connectionUrl)
-// log.Println(x)
 func newClientConnection(connectionUrl string) (conn *websocket.Conn) {
 	u, err := url.Parse(connectionUrl)
 	if err != nil {

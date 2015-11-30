@@ -44,7 +44,6 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	log.Println("Client connecting from " + req.RemoteAddr + ": using port : " +
 		strconv.Itoa(clientData.Port))
 
-	// clientData.Ip = req.RemoteAddr
 	clientData.Ip = strings.Split(req.RemoteAddr, ":")[0]
 
 	serverList := readServerList(serverFile)
@@ -146,7 +145,7 @@ func main() {
 
 	// make sure we can read the file
 	if e != nil {
-		fmt.Printf("File error: %v\n", e)
+		fmt.Printf("File error: %v Making new file\n", e)
 		os.Exit(1)
 	}
 

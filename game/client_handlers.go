@@ -12,14 +12,13 @@ func HandleClientEvent(event []byte, client *websocket.Conn) {
 	var message Message
 	json.Unmarshal(event, &message)
 	sourceId := connections[client]
+	sequenceId := message.SequenceNum
 	channelCoordinator.ProcessEvents(message.Event, message.Data, sourceId)
 }
 
 func initializeClientData(conn *websocket.Conn) {
 	// initialize the connection
-	// connections[conn] = true
 	clientData := ClientData{Client: conn, GameObjects: make(map[string]GameObject)}
-	// clients[conn] =
 	clientId := AddClientDataToMap(clientIdMap, &clientData)
 	clientData.ClientId = clientId
 	connections[conn] = clientId

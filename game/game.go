@@ -29,7 +29,6 @@ var connections map[*websocket.Conn]int // Maps the connection object to the cli
 var clientIdMap map[int]*ClientData
 
 // map that keeps track of what data came from what client
-// var clients map[*websocket.Conn]*ClientData
 
 var clientBackend backend.BackendController
 var serverBackend backend.BackendController
@@ -78,10 +77,6 @@ func initializeLogger() {
 	// TODO: Read a config file
 	InitLogger(os.Stdout, os.Stdout, os.Stdout, os.Stderr)
 	// InitLogger(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
-	// Trace.Println("I have something standard to say")
-	// Info.Println("Special Information")
-	// Warning.Println("There is something you need to know about")
-	// Error.Println("Something has failed")
 }
 
 // TODO: SHould this be in server vars?
@@ -101,20 +96,20 @@ func main() {
 	interactive := flag.Bool("i", false, "Run with an interactive shell")
 	flag.Parse()
 
-	// =========Game Initializations============
+	// =========Game Initializations============================================
 	initializeGameData()
 
-	// =========Connection Initializations============
+	// =========Connection Initializations======================================
 	initializeConnectionData()
 
-	//=========Backend Initializations============
+	//=========Backend Initializations==========================================
 	initializeServerVars()
 
 	clientBackend = backend.NewBackendController(HandleClientEvent,
 		cleanUpSocket,
 		initializeClientData)
 
-	// =========Connection handlers===================
+	// =========Connection handlers=============================================
 	serverBackend = backend.NewBackendController(HandleServerEvent,
 		cleanUpSocket,
 		initializeServerData) // why doesn't go format align the arguments!

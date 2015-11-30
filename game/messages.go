@@ -1,15 +1,14 @@
 package main
 
-// TODO: What is this file and why does it exist?
-
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 )
 
 type Message struct {
-	Event string          `json:"event"`
-	Data  json.RawMessage `json:"data"` // how data is parsed depends on the event
+	Event       string          `json:"event"`
+	Data        json.RawMessage `json:"data"` // how data is parsed depends on the event
+	SequenceNum int             `json:"seq_num"`
 }
 
 type Events struct {
@@ -18,9 +17,10 @@ type Events struct {
 
 // keeps track of data from a client
 type ClientData struct {
-	Client      *websocket.Conn
-	GameObjects map[string]GameObject
-	ClientId    int
+	Client               *websocket.Conn
+	GameObjects          map[string]GameObject
+	ClientId             int
+	CurrentSequnceNumber int
 }
 
 type ClientMessage struct {
@@ -28,47 +28,29 @@ type ClientMessage struct {
 	Data json.RawMessage
 }
 
-type SyncEvent struct {
-	Event   string        `json:"event"` // client works with lowercase
-	Objects []SyncMessage `json:"data"`
-}
-
-type SyncMessage struct {
-	ObjType string  `json:"type"`
-	Id      string  `json:"id"`
-	X       float64 `json:"x"`
-	Y       float64 `json:"y"`
-}
-
-// messages to send back to client...Can't be raw json?
-// TODO: Figure out the struct stuff in go.
-type ObjectMessage struct {
-	Event  string     `json:"event"` // client works with lowercase
-	Packet GameObject `json:"data"`
-}
-
 // send all game objects that are currently in the game object map to the
 // client connected
 func SyncClient(client *websocket.Conn) {
 	// TODO: Assess whether or not this is going to be to slow
-	syncData := make([]SyncMessage, 0)
-	Info.Printf("Syncing data with socket: RemoteAddress %v, LocalAddress %v",
+	syncData := make([]AddMessage, 0)
 		client.RemoteAddr(), client.LocalAddr())
 
 	for _, obj := range gameObjects {
-		syncData = append(syncData, obj.BuildSyncMessage())
+		syncData = append(syncData, obj.BuildAddMessage())
 	}
-	Info.Printf("Syncing with %+v\n", syncData)
 
-	syncMessage := SyncEvent{Event: "sync", Objects: syncData}
-	syncMessageAsJson, _ := json.Marshal(syncMessage)
+	var broadcastMessages []Message
+	syncDataBytes, _ := json.Marshal(syncData)
+	// message := Message{Event: "df", Data: syncDataBytes}
+	broadcastMessages = appendEventMessage("blahblah", syncDataBytes, broadcastMessages)
 
-	clientBackend.SendToClient(syncMessageAsJson, client)
-}
+	broadcastEventsMessages := makeEventsMessage(broadcastMessages)
+	broadcastBytes, _ := json.Marshal(broadcastEventsMessages)
+	broadcastBytes2, _ := json.Marshal(broadcastMessages)
 
-func BuildObjectPackage(event string, gameObj GameObject) []byte {
-	updateMessage := ObjectMessage{Event: event, Packet: gameObj}
-	message, _ := json.Marshal(updateMessage)
+	message2 := makeSingleEventMessage("blahblah", syncDataBytes)
 
-	return message
+	messageJson, _ := json.Marshal(message2)
+
+	clientBackend.SendToClient(messageJson, client)
 }

@@ -7,7 +7,7 @@ import (
 // Spawns the game loop and returns the channels to comminucate with the game
 // TODO: Currently that is just the move channels, maybe return the ticker channel?
 // TODO: TODO: Make it return channel of channels
-func StartGameLoop() (chan *MoveRequest, chan *AddRequest, chan *AddRequest) {
+func StartGameLoop() (chan *MoveMessage, chan *AddMessage, chan *AddMessage) {
 	// about 16 milliseconds for 60 fps a second
 	gameTick := time.NewTicker(time.Millisecond * 10)
 
@@ -16,9 +16,9 @@ func StartGameLoop() (chan *MoveRequest, chan *AddRequest, chan *AddRequest) {
 	timeStep := (time.Millisecond * 2).Seconds()
 
 	// TODO: Figure out buffering properly
-	moveChannel := make(chan *MoveRequest, 10)
-	addChannel := make(chan *AddRequest, 10)
-	broadcastAddChannel := make(chan *AddRequest, 10)
+	moveChannel := make(chan *MoveMessage, 10)
+	addChannel := make(chan *AddMessage, 10)
+	broadcastAddChannel := make(chan *AddMessage, 10)
 
 	// actual Game Loop. TODO: Should this be a function call?
 	go func() {
@@ -73,7 +73,7 @@ func AddPlayerObjectToWorld(player Player) {
 }
 
 // Physics loops listens from move requests and
-func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveRequest, timeStep float64) {
+func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveMessage, timeStep float64) {
 	frameSimulated := 0
 	for range physicsTick.C {
 		// Read any movement updates
@@ -83,7 +83,7 @@ func PhysicsLoop(physicsTick *time.Ticker, moveChannel chan *MoveRequest, timeSt
 			id := msg.Id
 			if physicsComp, ok := physicsComponents[id]; ok {
 				//do something here
-				physicsComp.Move(msg.Xvel, msg.Yvel)
+				physicsComp.Move(msg.X, msg.Y)
 			}
 		default:
 			// Move on to other things
